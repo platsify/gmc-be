@@ -16,7 +16,8 @@ class CreateMapShopProductsTable extends Migration
         Schema::create('map_shop_products', function (Blueprint $table) {
             $table->id();
             $table->integer('product_id')->index('INDEX_PRODUCT_ID');
-            $table->integer('shop_id')->index('INDEX_SHOP_ID');
+            $table->string('original_product_id')->index('INDEX_ORIGINAL_PRODUCT_ID');
+            $table->integer('category_id')->index('INDEX_CATEGORY_ID');
             $table->boolean('sync_gmc')->default(false)->comment('Does this product synced to GMC?');
             $table->boolean('active')->default(true);
             $table->timestamps();
