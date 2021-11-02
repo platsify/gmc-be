@@ -1,3 +1,4 @@
 *
 !public/
+!google-merchant-api
 !.gitignore
