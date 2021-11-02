@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             ShopSeeder::class,
             ProjectSeeder::class,
+            CustomFieldSeeder::class
         ]);
     }
 }
