@@ -13,7 +13,8 @@
         "laravel/framework": "^8.65",
         "laravel/sanctum": "^2.11",
         "laravel/tinker": "^2.5",
-        "moirei/laravel-google-merchant-api": "^1.1"
+        "moirei/laravel-google-merchant-api": "^1.1",
+      "ext-curl": "*"
     },
     "require-dev": {
         "barryvdh/laravel-ide-helper": "^2.10",
