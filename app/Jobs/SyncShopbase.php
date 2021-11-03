@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Models\Shop;
+use App\Repositories\Category\CategoryRepositoryInterface;
 use App\Services\Shopbase;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
@@ -16,6 +17,8 @@ class SyncShopbase implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     private $shopId;
+
+    private $categoryRepository;
 
     /** @var Shopbase $object */
     private $shopbase;
@@ -35,11 +38,13 @@ class SyncShopbase implements ShouldQueue
      *
      * @return void
      */
-    public function handle()
+    public function handle(CategoryRepositoryInterface $categoryRepository)
     {
+        $this->categoryRepository = $categoryRepository;
+
         $shop = Shop::find($this->shopId)->where('type', Shop::SHOP_TYPE_SHOPBASE)->first();
         if (!$shop) {
-            return true;
+            return;
         }
         $this->shopbase = new Shopbase($shop->url, $shop->api_key, $shop->api_secret);
 
@@ -51,9 +56,12 @@ class SyncShopbase implements ShouldQueue
         $customCollections = $this->shopbase->getCustomCollections();
         $smartCollections = $this->shopbase->getSmartCollections();
 
-        if ($customCollections) {
-            foreach ($customCollections as $collection) {
+        if ($customCollections && !empty($customCollections->custom_collections)) {
+            foreach ($customCollections->custom_collections as $collection) {
+
+                $collection = (object) $collection;
                 $categories[] = array(
+                    'shop_id' => $this->shopId,
                     'active' => $collection->published,
                     'original_id' => $collection->id,
                     'name' => $collection->title
@@ -61,9 +69,11 @@ class SyncShopbase implements ShouldQueue
             }
         }
 
-        if ($smartCollections) {
-            foreach ($smartCollections as $collection) {
+        if ($smartCollections && !empty($smartCollections->smart_collections)) {
+            foreach ($smartCollections->smart_collections as $collection) {
+                $collection = (object) $collection;
                 $categories[] = array(
+                    'shop_id' => $this->shopId,
                     'active' => $collection->published,
                     'original_id' => $collection->id,
                     'name' => $collection->title
@@ -71,8 +81,9 @@ class SyncShopbase implements ShouldQueue
             }
         }
 
-
-
-
+        // Upsert category
+        foreach ($categories as $category) {
+            $this->categoryRepository->upsertByOriginalId($category['original_id'], $category);
+        }
     }
 }

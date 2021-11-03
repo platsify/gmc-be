@@ -2,7 +2,9 @@
 
 namespace App\Repositories\Category;
 
-class CategoryRepositoryInterface
-{
+use App\Repositories\RepositoryInterface;
 
+interface CategoryRepositoryInterface extends RepositoryInterface
+{
+    public function upsertByOriginalId($originalId, $attributes);
 }

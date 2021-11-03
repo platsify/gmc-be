@@ -2,11 +2,12 @@
 
 namespace App\Console\Commands;
 
+use App\Jobs\SyncShopbase;
 use App\Models\Shop;
 use App\Services\Shopbase;
 use Illuminate\Console\Command;
 
-class SyncShopbase extends Command
+class SyncShopbaseCommand extends Command
 {
     /**
      * The name and signature of the console command.
@@ -39,7 +40,7 @@ class SyncShopbase extends Command
      */
     public function handle()
     {
-
+        SyncShopbase::dispatch(1);
     }
 
 }

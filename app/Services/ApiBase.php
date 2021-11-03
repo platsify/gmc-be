@@ -20,7 +20,6 @@ class ApiBase
 
             $headers = array_merge($defaultHeaders, $headers);
 
-            print_r($headers);
             $curl = curl_init();
             curl_setopt_array($curl, array(
                 CURLOPT_URL => $url,

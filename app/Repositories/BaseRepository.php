@@ -6,21 +6,15 @@ use App\Repositories\RepositoryInterface;
 
 abstract class BaseRepository implements RepositoryInterface
 {
-    //model muốn tương tác
     protected $model;
 
-    //khởi tạo
     public function __construct()
     {
         $this->setModel();
     }
 
-    //lấy model tương ứng
     abstract public function getModel();
 
-    /**
-     * Set model
-     */
     public function setModel()
     {
         $this->model = app()->make(
@@ -33,11 +27,17 @@ abstract class BaseRepository implements RepositoryInterface
         return $this->model->all();
     }
 
+    public function getPaginate() {
+        return $this->model->paginate();
+    }
+
     public function find($id)
     {
-        $result = $this->model->find($id);
+        return $this->model->find($id);
+    }
 
-        return $result;
+    public function findBySpecificField($fieldName, $fieldValue) {
+        return $this->model->where($fieldName, $fieldValue)->first();
     }
 
     public function create($attributes = [])
@@ -56,7 +56,16 @@ abstract class BaseRepository implements RepositoryInterface
         return false;
     }
 
-    public function delete($id)
+    public function upsertBySpecificField($fieldName, $fieldValue, $attributes) {
+        $item = $this->findBySpecificField($fieldName, $fieldValue);
+        if (!$item) {
+            return $this->create($attributes);
+        }
+
+        return $this->update($item->id, $attributes);
+    }
+
+    public function delete($id): bool
     {
         $result = $this->find($id);
         if ($result) {

@@ -18,7 +18,7 @@ class CreateCategoriesTable extends Migration
             $table->string('name');
             $table->string('original_id')->index('INDEX_ORIGINAL_ID');
             $table->integer('shop_id')->index('INDEX_SHOP_ID');
-            $table->integer('project_id')->index('INDEX_PROJECT_ID');
+            $table->integer('project_id')->nullable()->index('INDEX_PROJECT_ID');
             $table->boolean('active')->default(true);
             $table->timestamps();
         });
