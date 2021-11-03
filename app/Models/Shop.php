@@ -11,4 +11,6 @@ class Shop extends Model
 
     public const SHOP_TYPE_SHOPBASE = 1;
     public const SHOP_TYPE_WOO = 2;
+
+    protected $guarded = ['id'];
 }
