@@ -7,6 +7,7 @@ use App\Models\Shop;
 use App\Repositories\Category\CategoryRepositoryInterface;
 use App\Repositories\Product\ProductRepositoryInterface;
 use App\Repositories\ProductMapCategory\ProductMapCategoryRepositoryInterface;
+use App\Repositories\RawProduct\RawProductRepositoryInterface;
 use App\Services\Shopbase;
 use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
@@ -30,6 +31,7 @@ class SyncShopbase implements ShouldQueue
     private $categoryRepository;
     private $productRepository;
     private $productMapCategoryRepository;
+    private $rawProductRepository;
 
     /** @var Shopbase $object */
     private $shopbase;
@@ -50,13 +52,14 @@ class SyncShopbase implements ShouldQueue
      *
      * @return void
      */
-    public function handle(CategoryRepositoryInterface $categoryRepository, ProductRepositoryInterface $productRepository, ProductMapCategoryRepositoryInterface $productMapCategoryRepository)
+    public function handle(CategoryRepositoryInterface $categoryRepository, ProductRepositoryInterface $productRepository, ProductMapCategoryRepositoryInterface $productMapCategoryRepository,  RawProductRepositoryInterface $rawProductRepository)
     {
         $this->categoryRepository = $categoryRepository;
         $this->productRepository = $productRepository;
         $this->productMapCategoryRepository = $productMapCategoryRepository;
+        $this->rawProductRepository = $rawProductRepository;
 
-        $shop = Shop::find($this->shopId)->where('type', Shop::SHOP_TYPE_SHOPBASE)->first();
+        $shop = Shop::where('_id', $this->shopId)->where('type', Shop::SHOP_TYPE_SHOPBASE)->first();
         if (!$shop) {
             return;
         }
@@ -68,7 +71,8 @@ class SyncShopbase implements ShouldQueue
         $this->syncProducts();
     }
 
-    public function syncProducts() {
+    public function syncProducts()
+    {
         $categories = $this->categoryRepository->findManyBySpecificField('shop_id', $this->shopId);
         foreach ($categories as $category) {
             // Nếu quét lần đầu, thì sẽ rất nhiều SP, mà shopbase chỉ cho 10k sản phẩm phân trang, vì vậy chuyển sang quét theo id
@@ -85,7 +89,7 @@ class SyncShopbase implements ShouldQueue
 
             do {
                 $page++;
-                $originalCategoryId = str_replace($this->shopId.'__', '', $category->original_id);
+                $originalCategoryId = str_replace($this->shopId . '__', '', $category->original_id);
                 if ($this->isFirstCrawlTime) {
                     $queryOptions = ['collection_id' => $originalCategoryId, 'limit' => 250, 'sort_field' => 'id', 'sort_mode' => 'asc', 'since_id' => $sinceId];
                 } else {
@@ -108,9 +112,11 @@ class SyncShopbase implements ShouldQueue
                     // Ghi đè một số field nếu sản phẩm này đã tồn tại (có thể sẽ ko còn dùng default value nên cần ghi đè)
                     $existingProduct = $this->productRepository->findBySpecificField('original_id', $productData['original_id']);
                     if ($existingProduct) {
+                        // Upsert raw product
+                        $this->rawProductRepository->upsertByProductId($existingProduct->id, $sbProduct);
 
                         // Upsert map product, category
-                        $mapProductCategory = array('product_id' => $existingProduct->id, 'category_id' => $category->id, 'pici' => $existingProduct->id.'__'.$category->id);
+                        $mapProductCategory = array('product_id' => $existingProduct->id, 'category_id' => $category->id, 'pici' => $existingProduct->id . '__' . $category->id);
                         $this->productMapCategoryRepository->upsertByPici($mapProductCategory['pici'], $mapProductCategory);
 
 
@@ -125,8 +131,11 @@ class SyncShopbase implements ShouldQueue
                     // Upsert product
                     $savedProduct = $this->productRepository->upsertByOriginalId($sbProduct->id, $productData);
 
+                    // Upsert raw product
+                    $this->rawProductRepository->upsertByProductId($savedProduct->id, $sbProduct);
+
                     // Upsert map product, category
-                    $mapProductCategory = array('product_id' => $savedProduct->id, 'category_id' => $category->id, 'pici' => $savedProduct->id.'__'.$category->id);
+                    $mapProductCategory = array('product_id' => $savedProduct->id, 'category_id' => $category->id, 'pici' => $savedProduct->id . '__' . $category->id);
                     $this->productMapCategoryRepository->upsertByPici($mapProductCategory['pici'], $mapProductCategory);
 
 
@@ -138,7 +147,8 @@ class SyncShopbase implements ShouldQueue
         }
     }
 
-    public function syncCategories() {
+    public function syncCategories()
+    {
         $categories = array();
         $customCollections = $this->shopbase->getCustomCollections();
         $smartCollections = $this->shopbase->getSmartCollections();
@@ -146,11 +156,11 @@ class SyncShopbase implements ShouldQueue
         if ($customCollections && !empty($customCollections->custom_collections)) {
             foreach ($customCollections->custom_collections as $collection) {
 
-                $collection = (object) $collection;
+                $collection = (object)$collection;
                 $categories[] = array(
                     'shop_id' => $this->shopId,
                     'active' => $collection->published,
-                    'original_id' => $this->shopId.'__'.$collection->id,
+                    'original_id' => $this->shopId . '__' . $collection->id,
                     'name' => $collection->title
                 );
             }
@@ -158,11 +168,11 @@ class SyncShopbase implements ShouldQueue
 
         if ($smartCollections && !empty($smartCollections->smart_collections)) {
             foreach ($smartCollections->smart_collections as $collection) {
-                $collection = (object) $collection;
+                $collection = (object)$collection;
                 $categories[] = array(
                     'shop_id' => $this->shopId,
                     'active' => $collection->published,
-                    'original_id' => $this->shopId.'__'.$collection->id,
+                    'original_id' => $this->shopId . '__' . $collection->id,
                     'name' => $collection->title
                 );
             }

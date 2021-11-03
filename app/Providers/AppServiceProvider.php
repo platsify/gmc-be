@@ -27,6 +27,11 @@ class AppServiceProvider extends ServiceProvider
             \App\Repositories\Product\ProductRepositoryInterface::class,
             \App\Repositories\Product\ProductRepository::class
         );
+
+        $this->app->singleton(
+            \App\Repositories\RawProduct\RawProductRepositoryInterface::class,
+            \App\Repositories\RawProduct\RawProductRepository::class
+        );
     }
 
     /**

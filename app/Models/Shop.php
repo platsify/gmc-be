@@ -3,7 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+//use Illuminate\Database\Eloquent\Model;
+use Jenssegers\Mongodb\Eloquent\Model;
 
 class Shop extends Model
 {
@@ -11,4 +12,6 @@ class Shop extends Model
 
     public const SHOP_TYPE_SHOPBASE = 1;
     public const SHOP_TYPE_WOO = 2;
+
+    protected $guarded = ['_id'];
 }
