@@ -2,17 +2,18 @@
 
 namespace App\Console\Commands;
 
-use App\Services\WooClient;
+use App\Models\Shop;
+use App\Services\Shopbase;
 use Illuminate\Console\Command;
 
-class GetWooProducts extends Command
+class SyncShopbase extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'get_woo_products';
+    protected $signature = 'sync_shopbase';
 
     /**
      * The console command description.
@@ -38,8 +39,7 @@ class GetWooProducts extends Command
      */
     public function handle()
     {
-        $wc = new WooClient('https://ebookfiver.com/', 'ck_53767244239cb814ee141c454903129f80800b6f', 'cs_a04d6f2888c05d5ccb3035ba9edfb9dfa5ebeef3');
-        dd($wc->getProducts());
-        return Command::SUCCESS;
+
     }
+
 }
