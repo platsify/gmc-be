@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
-use App\Repositories\Product\ProductRepositoryInterface;
+use App\Repositories\Product\ProductMapCategoryRepositoryInterface;
 use Illuminate\Http\Request;
 use MOIREI\GoogleMerchantApi\Facades\ProductApi;
 use MOIREI\GoogleMerchantApi\Contents\Product\Product as GMProduct;
@@ -11,11 +11,11 @@ use MOIREI\GoogleMerchantApi\Contents\Product\Product as GMProduct;
 class ProductController extends Controller
 {
     /**
-     * @var ProductRepositoryInterface
+     * @var ProductMapCategoryRepositoryInterface
      */
     protected $productRepo;
 
-    public function __construct(ProductRepositoryInterface $productRepo)
+    public function __construct(ProductMapCategoryRepositoryInterface $productRepo)
     {
         $this->productRepo = $productRepo;
     }

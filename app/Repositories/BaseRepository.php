@@ -40,8 +40,13 @@ abstract class BaseRepository implements RepositoryInterface
         return $this->model->where($fieldName, $fieldValue)->first();
     }
 
+    public function findManyBySpecificField($fieldName, $fieldValue) {
+        return $this->model->where($fieldName, $fieldValue)->get();
+    }
+
     public function create($attributes = [])
     {
+        $attributes = (array) $attributes;
         return $this->model->create($attributes);
     }
 

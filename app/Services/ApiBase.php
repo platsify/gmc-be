@@ -9,6 +9,8 @@ class ApiBase
 {
     public function request($url, $method = 'GET', $data = array(), $headers = array())
     {
+        $method = strtoupper($method);
+
         try {
             $defaultHeaders = array(
                 'accept: application/json, text/plain, */*',
@@ -19,6 +21,10 @@ class ApiBase
             );
 
             $headers = array_merge($defaultHeaders, $headers);
+            if ($method == 'GET') {
+                $query = http_build_query($data);
+                $url .= '?'.$query;
+            }
 
             $curl = curl_init();
             curl_setopt_array($curl, array(
@@ -39,6 +45,7 @@ class ApiBase
             curl_close($curl);
             return json_decode($response);
         } catch (\Exception $e) {
+            echo $e->getMessage()."\n";
             Log::error($e);
             return null;
         }

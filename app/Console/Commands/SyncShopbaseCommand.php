@@ -40,7 +40,8 @@ class SyncShopbaseCommand extends Command
      */
     public function handle()
     {
-        SyncShopbase::dispatch(1);
+        $shop = Shop::first();
+        SyncShopbase::dispatch($shop->id);
     }
 
 }
