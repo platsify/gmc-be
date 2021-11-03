@@ -17,6 +17,7 @@ class ShopSeeder extends Seeder
         DB::table('shops')->insert([
             'name' => 'dathoastore',
             'url' => 'https://dathoastore.onshopbase.com/',
+            'public_url' => 'https://outdoorprints3d.com/',
             'type' => 1,
             'gmc_id' => '510563015',
             'gmc_credential' => 'app/google-merchant-api/tran-hoang-giang.json',

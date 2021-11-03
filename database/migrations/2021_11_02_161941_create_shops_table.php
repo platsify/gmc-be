@@ -17,6 +17,7 @@ class CreateShopsTable extends Migration
             $table->id();
             $table->string('name');
             $table->string('url');
+            $table->string('public_url');
             $table->integer('type')->default(1)->comment('1 is ApiShopbase, 2 is Woocomerce');
             $table->string('gmc_id');
             $table->string('gmc_credential');

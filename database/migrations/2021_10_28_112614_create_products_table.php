@@ -15,12 +15,12 @@ class CreateProductsTable extends Migration
     {
         Schema::create('products', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->string('url')->nullable();
-            $table->string('image_url')->nullable();
-            $table->string('original_product_id')->index('INDEX_ORIGINAL_PRODUCT_ID');
+            $table->string('name', 500);
+            $table->string('url', 500)->nullable();
+            $table->string('image_url', 500)->nullable();
+            $table->string('original_id')->index('INDEX_ORIGINAL_ID');
             $table->integer('original_last_update');
-            $table->integer('category_id')->index('INDEX_CATEGORY_ID');
+            $table->integer('shop_id')->index('INDEX_SHOP_ID');
             $table->boolean('sync_gmc')->default(false)->comment('Does this product synced to GMC?');
             $table->boolean('active')->default(true);
             $table->timestamps();
