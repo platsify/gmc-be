@@ -1,7 +1,9 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ShopController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -25,4 +27,6 @@ Route::post('auth/logout', [AuthController::class, 'logout']);
 
 Route::resource('product', ProductController::class);
 Route::apiResource('shop', ShopController::class);
+Route::apiResource('project', ProjectController::class);
+Route::apiResource('category', CategoryController::class);
 

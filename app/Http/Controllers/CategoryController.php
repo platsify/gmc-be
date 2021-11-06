@@ -15,7 +15,7 @@ class CategoryController extends Controller
      */
     public function index()
     {
-        $perPage = isset($request->per_page) ? (int)$request->per_page : 10;
+        $perPage = isset($request->per_page) ? (int)$request->per_page : 50;
         $sort = $request->sort ?? 'id';
         $direction = isset($request->direction) ? strtoupper($request->direction) : 'DESC';
 
