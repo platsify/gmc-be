@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Project;
+use App\Models\CustomField;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
-class ProjectController extends Controller
+class CustomFieldController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -15,11 +15,11 @@ class ProjectController extends Controller
      */
     public function index()
     {
-        $perPage = isset($request->per_page) ? (int)$request->per_page : 10;
+        $perPage = isset($request->per_page) ? (int)$request->per_page : 20;
         $sort = $request->sort ?? 'id';
         $direction = isset($request->direction) ? strtoupper($request->direction) : 'DESC';
 
-        $query = Project::query();
+        $query = CustomField::query();
 
         if (!empty($request->search)) {
             $search = is_numeric($request->search) ? (int)$request->search : $request->search;
@@ -52,18 +52,12 @@ class ProjectController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param Request $request
-     * @return JsonResponse
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\Response
      */
     public function store(Request $request)
     {
-        $project = Project::create($request->all());
-
-        return response()->json([
-            'status' => 'success',
-            'message' => __('Thêm project thành công'),
-            'data' => $project
-        ]);
+        //
     }
 
     /**
@@ -91,7 +85,7 @@ class ProjectController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param Request $request
+     * @param \Illuminate\Http\Request $request
      * @param int $id
      * @return \Illuminate\Http\Response
      */
