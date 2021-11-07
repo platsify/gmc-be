@@ -31,3 +31,5 @@ Route::apiResource('shop', ShopController::class);
 Route::apiResource('project', ProjectController::class);
 Route::apiResource('category', CategoryController::class);
 Route::apiResource('custom-field', CustomFieldController::class);
+
+Route::get('shop/sync_now/{shopId}', [ShopController::class, 'syncNow']);

@@ -61,14 +61,36 @@ class SyncShopbase implements ShouldQueue
 
         $shop = Shop::where('_id', $this->shopId)->where('type', Shop::SHOP_TYPE_SHOPBASE)->first();
         if (!$shop) {
+            echo 'Shop not found';
             return;
         }
         $this->shop = $shop;
+
+        // TODO: Using ShopRepository
+        // Lưu trạng thái job đang chạy
+        $this->shop->sync_status = Shop::SHOP_SYNC_RUNNING;
+        $this->shop->save();
+
+
         $this->shopbase = new Shopbase($shop->url, $shop->api_key, $shop->api_secret);
-
         $this->syncCategories();
-
+        $this->countProducts();
         $this->syncProducts();
+
+        // TODO: Using ShopRepository
+        // Save done job and last sync
+        $this->shop->sync_status = Shop::SHOP_SYNC_DONE;
+        $this->shop->last_sync = time();
+        $this->shop->save();
+    }
+
+    public function countProducts() {
+        $sbCountProduct = $this->shopbase->countProducts();
+        if ($sbCountProduct && $sbCountProduct->count) {
+            // TODO: Using ShopRepository
+            $this->shop->total_product = $sbCountProduct->count;
+            $this->shop->save();
+        }
     }
 
     public function syncProducts()
@@ -82,18 +104,13 @@ class SyncShopbase implements ShouldQueue
             $lastUpdatedAt = $this->lastSync;
             $page = 0;
 
-            $lastUpdateProduct = $this->productRepository->getLastUpdateProduct();
-            if ($lastUpdateProduct) {
-                $lastUpdatedAt = $lastUpdateProduct->original_last_update;
-            }
-
             do {
                 $page++;
                 $originalCategoryId = str_replace($this->shopId . '__', '', $category->original_id);
                 if ($this->lastSync == 0) {
                     $queryOptions = ['collection_id' => $originalCategoryId, 'limit' => 250, 'sort_field' => 'id', 'sort_mode' => 'asc', 'since_id' => $sinceId];
                 } else {
-                    $queryOptions = ['collection_id' => $originalCategoryId, 'page' => $page, 'limit' => 250, 'sort_field' => 'updated_at', 'sort_mode' => 'asc', 'updated_at_min' => Carbon::createFromTimestamp($lastUpdatedAt)->toISOString()];
+                    $queryOptions = ['collection_id' => $originalCategoryId, 'page' => $page, 'limit' => 250, 'updated_at_min' => Carbon::createFromTimestamp($lastUpdatedAt)->toISOString()];
                 }
                 $sbProducts = $this->shopbase->getProducts($queryOptions);
                 if (!$sbProducts || empty($sbProducts) || empty($sbProducts->products)) {
@@ -103,6 +120,8 @@ class SyncShopbase implements ShouldQueue
                     break;
                 }
 
+
+                $insertNewProductCount = 0;
                 foreach ($sbProducts->products as $sbProduct) {
 
                     $sinceId = $sbProduct->id;
@@ -125,11 +144,12 @@ class SyncShopbase implements ShouldQueue
                             echo "Trùng " . $sbProduct->id . " \n";
                             continue;
                         }
-                        $productData['sync_gmc'] = $existingProduct->sync_gmc;
+                    } else {
+                        $insertNewProductCount ++;
                     }
 
                     // Upsert product
-                    $savedProduct = $this->productRepository->upsertByOriginalId($sbProduct->id, $productData);
+                    $savedProduct = $this->productRepository->upsertByOriginalId($productData['original_id'], $productData);
 
                     // Upsert raw product
                     $this->rawProductRepository->upsertByProductId($savedProduct->id, $sbProduct);
@@ -143,13 +163,15 @@ class SyncShopbase implements ShouldQueue
 
                     echo "Upsert product $sbProduct->id\n";
                 }
+
+                // TODO: Using ShopRepository
+                // Update crawled count
+                $crawledProductCount = $this->shop->crawled_product?: 0;
+                $this->shop->crawled_product = $crawledProductCount + $insertNewProductCount;
+                $this->shop->save();
+
             } while (true);
         }
-
-        // Save done job and last sync
-        $this->shop->sync_status = Shop::SHOP_SYNC_DONE;
-        $this->shop->last_sync = time();
-        $this->shop->save();
     }
 
     public function syncCategories()

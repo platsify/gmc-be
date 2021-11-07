@@ -78,7 +78,6 @@ class ShopController extends Controller
         if ($validator->fails()) {
             return response()->json(['success' => false, 'message' => $validator->errors()->first(), 'errors' => [$validator->getMessageBag()->toArray()]]);
         }
-        return response()->json(['success' => false, 'message' => 'sdfsdf']);
 
         $name = $request->input('name');
         $url = $request->input('url');
@@ -91,10 +90,19 @@ class ShopController extends Controller
         $apiSecret = $request->input('api_secret');
         $active = $request->active;
 
-        if ($request->input('id') !== null) {
+        $isNewShop = false;
+        if ($request->input('id')) {
             $shop = Shop::find($request->input('id'));
+            if (!$shop) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Shop not found'
+                ]);
+            }
+
             $message = __('Cập nhật shop thành công');
         } else {
+            $isNewShop = true;
             $shop = new Shop();
             $message = __('Thêm shop thành công');
         }
@@ -110,6 +118,9 @@ class ShopController extends Controller
         $shop->active = ($active || $active == "true") ? 1 : 0;
         $shop->save();
 
+        if ($isNewShop) {
+            SyncShopbase::dispatch($shop->id, 0);
+        }
         return response()->json([
             'status' => 'success',
             'message' => $message,
@@ -191,9 +202,10 @@ class ShopController extends Controller
         ]);
     }
 
-    public function syncNow($projectId)
+    public function syncNow($shopId)
     {
-        $shop = Shop::find($projectId);
+        // TODO: Using ShopRepository
+        $shop = Shop::where('_id', $shopId)->first();
         if (!$shop) {
             return response()->json([
                 'success' => false,
@@ -201,15 +213,15 @@ class ShopController extends Controller
             ]);
         }
 
-        if (!$shop->last_sync) {
-            SyncShopbase::dispatch($shop->shop_id);
-        } else {
-            SyncShopbase::dispatch($shop->shop_id, $shop->last_sync);
+        if (!isset($shop->sync_status) && $shop->sync_status == Shop::SHOP_SYNC_RUNNING) {
+            return response()->json([
+                'success' => true,
+                'message' => 'You submitted the request before, it has already been added to the queue'
+            ]);
         }
 
-        // Lưu trạng thái job đang chạy
-        $shop->sync_status = Shop::SHOP_SYNC_RUNNING;
-        $shop->save();
+        $lastSync = ($shop->last_sync) ?: 0;
+        SyncShopbase::dispatch($shop->id, $lastSync);
 
         return response()->json([
             'success' => true,

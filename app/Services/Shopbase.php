@@ -11,6 +11,7 @@ class Shopbase extends ApiBase
     public $epCustomCollections = '/admin/custom_collections.json';
     public $epProducts = '/admin/products.json';
     public $epCollectionProducts = '/admin/products/collection.json';
+    public $epCountProducts = '/admin/products/count.json';
 
     public function __construct($url, $key, $secret)
     {
@@ -36,6 +37,12 @@ class Shopbase extends ApiBase
         return $this->request($url, 'GET', $options);
     }
 
+    public function countProducts()
+    {
+        $url = $this->url . $this->epCountProducts;
+        return $this->request($url, 'GET');
+    }
+
     public function getCollectionProductsByPage($page = 1)
     {
         $url = $this->url . $this->epCollectionProducts;
@@ -57,7 +64,6 @@ class Shopbase extends ApiBase
         $productData['original_id'] = $shop['id'] . '__' . $sbProduct->id;
         $productData['shop_id'] = $shop['id'];
         $productData['original_last_update'] = strtotime($sbProduct->updated_at);
-        $productData['sync_gmc'] = false;
         $productData['active'] = $sbProduct->published;
 
         return $productData;

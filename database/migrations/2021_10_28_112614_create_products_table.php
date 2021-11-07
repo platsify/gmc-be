@@ -21,7 +21,6 @@ class CreateProductsTable extends Migration
             $table->string('original_id')->index('INDEX_ORIGINAL_ID');
             $table->integer('original_last_update');
             $table->integer('shop_id')->index('INDEX_SHOP_ID');
-            $table->boolean('sync_gmc')->default(false)->comment('Does this product synced to GMC?');
             $table->boolean('active')->default(true);
             $table->timestamps();
         });
