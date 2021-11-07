@@ -64,7 +64,7 @@ class ProductController extends Controller
             return response()->json(['success' => true, 'data' => $product]);
         }
 
-        return response()->json(['success' => false, 'msg' => 'Product not found']);
+        return response()->json(['success' => false, 'message' => 'Product not found']);
 
     }
 
@@ -82,7 +82,7 @@ class ProductController extends Controller
             return response()->json(['success' => true, 'data' => $product]);
         }
 
-        return response()->json(['success' => false, 'msg' => 'Product not found']);
+        return response()->json(['success' => false, 'message' => 'Product not found']);
     }
 
     public function destroy(Product $product)

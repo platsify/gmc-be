@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\SyncShopbase;
+use App\Models\Project;
 use App\Models\Shop;
 use Auth;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Validator;
 use Storage;
 
 class ShopController extends Controller
@@ -61,8 +64,25 @@ class ShopController extends Controller
      */
     public function store(Request $request)
     {
+        $validator = Validator::make($request->all(), [
+            'name' => 'string',
+            'url' => 'string',
+            'public_url' => 'string',
+            'type' => 'required|numeric',
+            'gmc_id' => 'numeric',
+            'gmc_credential' => 'required',
+            'api_key' => 'string',
+            'api_secret' => 'string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'message' => $validator->errors()->first(), 'errors' => [$validator->getMessageBag()->toArray()]]);
+        }
+        return response()->json(['success' => false, 'message' => 'sdfsdf']);
+
         $name = $request->input('name');
         $url = $request->input('url');
+        $publicUrl = $request->input('public_url');
         $type = $request->input('type');
         $gmcId = $request->input('gmc_id');
         $gmcFileName = $request->file('gmc_credential')->getClientOriginalName();
@@ -81,12 +101,13 @@ class ShopController extends Controller
 
         $shop->name = $name;
         $shop->url = $url;
+        $shop->public_url = $publicUrl;
         $shop->type = $type;
         $shop->gmc_id = $gmcId;
         $shop->gmc_credential = 'storage/app/credentials' . $gmcCredential;
         $shop->api_key = $apiKey;
         $shop->api_secret = $apiSecret;
-        $shop->active = (int)$active;
+        $shop->active = ($active || $active == "true") ? 1 : 0;
         $shop->save();
 
         return response()->json([
@@ -167,6 +188,32 @@ class ShopController extends Controller
         return response()->json([
             'status' => 'error',
             'message' => __('Xóa shop thất bại')
+        ]);
+    }
+
+    public function syncNow($projectId)
+    {
+        $shop = Shop::find($projectId);
+        if (!$shop) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Shop not found'
+            ]);
+        }
+
+        if (!$shop->last_sync) {
+            SyncShopbase::dispatch($shop->shop_id);
+        } else {
+            SyncShopbase::dispatch($shop->shop_id, $shop->last_sync);
+        }
+
+        // Lưu trạng thái job đang chạy
+        $shop->sync_status = Shop::SHOP_SYNC_RUNNING;
+        $shop->save();
+
+        return response()->json([
+            'success' => true,
+            'data' => ''
         ]);
     }
 }

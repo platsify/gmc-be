@@ -22,7 +22,7 @@ class SyncShopbase implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    private $isFirstCrawlTime;
+    private $lastSync;
     private $shopId;
 
     /** @var Shop $object */
@@ -41,9 +41,9 @@ class SyncShopbase implements ShouldQueue
      *
      * @return void
      */
-    public function __construct($shopId, $isFirstCrawlTime = true)
+    public function __construct($shopId, $lastSync = 0)
     {
-        $this->isFirstCrawlTime = $isFirstCrawlTime;
+        $this->lastSync = $lastSync;
         $this->shopId = $shopId;
     }
 
@@ -79,7 +79,7 @@ class SyncShopbase implements ShouldQueue
             // TỪ lần sau, chỉ update lại, nên sẽ order by updated_at
 
             $sinceId = 0;
-            $lastUpdatedAt = 0;
+            $lastUpdatedAt = $this->lastSync;
             $page = 0;
 
             $lastUpdateProduct = $this->productRepository->getLastUpdateProduct();
@@ -90,7 +90,7 @@ class SyncShopbase implements ShouldQueue
             do {
                 $page++;
                 $originalCategoryId = str_replace($this->shopId . '__', '', $category->original_id);
-                if ($this->isFirstCrawlTime) {
+                if ($this->lastSync == 0) {
                     $queryOptions = ['collection_id' => $originalCategoryId, 'limit' => 250, 'sort_field' => 'id', 'sort_mode' => 'asc', 'since_id' => $sinceId];
                 } else {
                     $queryOptions = ['collection_id' => $originalCategoryId, 'page' => $page, 'limit' => 250, 'sort_field' => 'updated_at', 'sort_mode' => 'asc', 'updated_at_min' => Carbon::createFromTimestamp($lastUpdatedAt)->toISOString()];
@@ -145,6 +145,11 @@ class SyncShopbase implements ShouldQueue
                 }
             } while (true);
         }
+
+        // Save done job and last sync
+        $this->shop->sync_status = Shop::SHOP_SYNC_DONE;
+        $this->shop->last_sync = time();
+        $this->shop->save();
     }
 
     public function syncCategories()
