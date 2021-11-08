@@ -3,11 +3,18 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
+use App\Repositories\Category\CategoryRepository;
+use App\Repositories\Category\CategoryRepositoryInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class CategoryController extends Controller
 {
+    private $categoryRepository;
+
+    public function __construct(CategoryRepositoryInterface $categoryRepository) {
+        $this->categoryRepository = $categoryRepository;
+    }
     /**
      * Display a listing of the resource.
      *
@@ -37,6 +44,11 @@ class CategoryController extends Controller
         $query = $query->paginate($perPage);
 
         return response()->json($query);
+    }
+
+    public function getCategoryByShop($shopId) {
+        $items =  $this->categoryRepository->findManyBySpecificField('shop_id', $shopId);
+        return response()->json(['status' => 'success', 'data' => $items]);
     }
 
     /**

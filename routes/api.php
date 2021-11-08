@@ -29,7 +29,13 @@ Route::post('auth/logout', [AuthController::class, 'logout']);
 Route::resource('product', ProductController::class);
 Route::apiResource('shop', ShopController::class);
 Route::apiResource('project', ProjectController::class);
+
+// Category
+Route::get('category/by-shop/{shopId}', [CategoryController::class, 'getCategoryByShop']);
 Route::apiResource('category', CategoryController::class);
+
+// Custom field
+Route::get('custom-field/by-project/{shopId}', [CustomFieldController::class, 'getCustomFieldByProject']);
 Route::apiResource('custom-field', CustomFieldController::class);
 
 Route::get('shop/sync_now/{shopId}', [ShopController::class, 'syncNow']);

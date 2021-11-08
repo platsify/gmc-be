@@ -104,4 +104,13 @@ class CustomFieldController extends Controller
     {
         //
     }
+
+    public function getCustomFieldByProject($projectId): JsonResponse
+    {
+        $result = CustomField::where('object_type', CustomField::CUSTOM_FIELD_OBJECT_TYPE_PROJECT)->where('object_id', $projectId)->get();
+        if (!$result || empty($result) || count($result) == 0) {
+            $result = CustomField::where('object_type', CustomField::CUSTOM_FIELD_OBJECT_TYPE_PROJECT)->where('object_id', 'default')->get();
+        }
+        return response()->json(['status' => 'success', 'data' => $result]);
+    }
 }

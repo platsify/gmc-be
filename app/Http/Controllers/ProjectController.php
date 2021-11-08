@@ -4,11 +4,22 @@ namespace App\Http\Controllers;
 
 use App\Jobs\SyncShopbase;
 use App\Models\Project;
+use App\Repositories\Product\ProductRepositoryInterface;
+use App\Repositories\Project\ProjectRepositoryInterface;
+
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class ProjectController extends Controller
 {
+    private $productRepository;
+    private $projectRepository;
+    public function __construct(ProductRepositoryInterface $productRepository, ProjectRepositoryInterface $projectRepository)
+    {
+        $this->productRepository = $productRepository;
+        $this->projectRepository = $projectRepository;
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -58,13 +69,17 @@ class ProjectController extends Controller
      */
     public function store(Request $request)
     {
-        $project = Project::create($request->all());
-
-        return response()->json([
-            'status' => 'success',
-            'message' => __('Thêm project thành công'),
-            'data' => $project
-        ]);
+        $project = null;
+        if ($request->input('_id')) {
+            $project = $this->projectRepository->find($request->input('_id'));
+        }
+        if ($project) {
+            $result = $this->projectRepository->update($request->_id, $request->all());
+            return response()->json(['status' => 'success', 'data' => $result, 'message' => "Cập nhật thành cônffg"]);
+        } else {
+            $result = $this->projectRepository->create($request->all());
+            return response()->json(['status' => 'success', 'data' => $result, 'message' => "Thêm thành công"]);
+        }
     }
 
     /**
@@ -105,11 +120,23 @@ class ProjectController extends Controller
      * Remove the specified resource from storage.
      *
      * @param int $id
-     * @return \Illuminate\Http\Response
+     * @return JsonResponse
      */
     public function destroy($id)
     {
-        //
+        if ($this->projectRepository->delete($id)) {
+            // TODO: Xóa hết product map project
+
+            return response()->json([
+                'status' => 'success',
+                'message' => __('Xóa project thành công')
+            ]);
+        }
+
+        return response()->json([
+            'status' => 'error',
+            'message' => __('Xóa project thất bại')
+        ]);
     }
 
 }

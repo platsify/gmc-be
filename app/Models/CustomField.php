@@ -12,4 +12,6 @@ class CustomField extends Model
 
     protected $guarded = ['_id'];
 
+    public const CUSTOM_FIELD_OBJECT_TYPE_PRODUCT = 1;
+    public const CUSTOM_FIELD_OBJECT_TYPE_PROJECT = 2;
 }

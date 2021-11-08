@@ -16,7 +16,7 @@ class CreateCustomFieldsTable extends Migration
         Schema::create('custom_fields', function (Blueprint $table) {
             $table->id();
             $table->integer('object_type')->default('1')->comment('1 là product, 2 là project');
-            $table->integer('object_id')->index('INDEX_OBJECT_ID');
+            $table->string('object_id')->index('INDEX_OBJECT_ID');
             $table->string('name')->index('INDEX_NAME');
             $table->text('value')->nullable();
             $table->timestamps();

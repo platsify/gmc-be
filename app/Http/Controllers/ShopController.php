@@ -135,11 +135,16 @@ class ShopController extends Controller
      * Display the specified resource.
      *
      * @param int $id
-     * @return Response
+     * @return JsonResponse
      */
     public function show($id)
     {
-        //
+        $item = $this->shopRepository->find($id);
+        if ($item) {
+            return response()->json(['status' => 'success', 'data' => $item]);
+        }
+        return response()->json(['status' => 'error', 'message' => 'Shop not found']);
+
     }
 
     /**

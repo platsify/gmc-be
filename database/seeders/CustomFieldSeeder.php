@@ -30,7 +30,7 @@ class CustomFieldSeeder extends Seeder
         foreach ($fields as $name => $value) {
             DB::table('custom_fields')->insert([
                 'object_type' => 2,
-                'object_id' => 1,
+                'object_id' => 'default',
                 'name' => $name,
                 'value' => $value,
             ]);
