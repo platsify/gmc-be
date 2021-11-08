@@ -15,6 +15,7 @@ class CreateRawProductsTable extends Migration
     {
         Schema::create('raw_products', function (Blueprint $table) {
             $table->id();
+            $table->string('shop_id')->index('INDEX_SHOP_ID');
             $table->timestamps();
         });
     }

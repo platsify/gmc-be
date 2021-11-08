@@ -26,7 +26,7 @@ class Shop extends Model
 
     public function setActiveAttribute($value)
     {
-        $this->attributes['type'] = (int) $value;
+        $this->attributes['active'] = (boolean) $value;
     }
 
 }

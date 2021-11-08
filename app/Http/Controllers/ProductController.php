@@ -36,7 +36,7 @@ class ProductController extends Controller
 //        return response()->json(['hello' => 'haha'], 201);
 
         $products = $this->productRepo->getAll();
-        return response()->json(['success' => true, 'data' => $products]);
+        return response()->json(['status' => 'success', 'data' => $products]);
     }
 
     public function create()
@@ -54,14 +54,14 @@ class ProductController extends Controller
         $product->condition = 'new';
         $product->save();
 
-        return response()->json(['success' => true, 'data' => $product]);
+        return response()->json(['status' => 'success', 'data' => $product]);
     }
 
     public function show($id)
     {
         $product = $this->productRepo->find($id);
         if ($product) {
-            return response()->json(['success' => true, 'data' => $product]);
+            return response()->json(['status' => 'success', 'data' => $product]);
         }
 
         return response()->json(['success' => false, 'message' => 'Product not found']);
@@ -79,7 +79,7 @@ class ProductController extends Controller
         $product = $this->productRepo->update($id, $data);
 
         if ($product) {
-            return response()->json(['success' => true, 'data' => $product]);
+            return response()->json(['status' => 'success', 'data' => $product]);
         }
 
         return response()->json(['success' => false, 'message' => 'Product not found']);

@@ -5,15 +5,30 @@ namespace App\Http\Controllers;
 use App\Jobs\SyncShopbase;
 use App\Models\Project;
 use App\Models\Shop;
+use App\Repositories\Product\ProductRepositoryInterface;
+use App\Repositories\RawProduct\RawProductRepositoryInterface;
 use Auth;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Validator;
 use Storage;
+use App\Repositories\Shop\ShopRepositoryInterface;
+use function Symfony\Component\Translation\t;
 
 class ShopController extends Controller
 {
+    private $shopRepository;
+    private $productRepository;
+    private $rawProductRepository;
+
+    public function __construct(ShopRepositoryInterface $shopRepository, ProductRepositoryInterface $productRepository, RawProductRepositoryInterface $rawProductRepository)
+    {
+        $this->shopRepository = $shopRepository;
+        $this->productRepository = $productRepository;
+        $this->rawProductRepository = $rawProductRepository;
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -26,7 +41,6 @@ class ShopController extends Controller
         $direction = isset($request->direction) ? strtoupper($request->direction) : 'DESC';
 
         $query = Shop::query();
-
         if (!empty($request->search)) {
             $search = is_numeric($request->search) ? (int)$request->search : $request->search;
             $colsToSearch = [
@@ -41,9 +55,10 @@ class ShopController extends Controller
             });
         }
         $query = $query->orderBy($sort, $direction);
-        $query = $query->paginate($perPage);
 
-        return response()->json($query);
+        $result = $query->paginate($perPage);
+
+        return response()->json($result);
     }
 
     /**
@@ -70,7 +85,6 @@ class ShopController extends Controller
             'public_url' => 'string',
             'type' => 'required|numeric',
             'gmc_id' => 'numeric',
-            'gmc_credential' => 'required',
             'api_key' => 'string',
             'api_secret' => 'string',
         ]);
@@ -79,48 +93,37 @@ class ShopController extends Controller
             return response()->json(['success' => false, 'message' => $validator->errors()->first(), 'errors' => [$validator->getMessageBag()->toArray()]]);
         }
 
-        $name = $request->input('name');
-        $url = $request->input('url');
-        $publicUrl = $request->input('public_url');
-        $type = $request->input('type');
-        $gmcId = $request->input('gmc_id');
-        $gmcFileName = $request->file('gmc_credential')->getClientOriginalName();
-        $gmcCredential = $request->file('gmc_credential')->storeAs('credentials', $gmcFileName);
-        $apiKey = $request->input('api_key');
-        $apiSecret = $request->input('api_secret');
-        $active = $request->active;
-
         $isNewShop = false;
-        if ($request->input('id')) {
-            $shop = Shop::find($request->input('id'));
+        if ($request->id) {
+            $shop = $this->shopRepository->find($request->id);
             if (!$shop) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Shop not found'
-                ]);
+                return response()->json(['success' => false, 'message' => 'Shop not found']);
             }
-
-            $message = __('Cập nhật shop thành công');
         } else {
             $isNewShop = true;
             $shop = new Shop();
-            $message = __('Thêm shop thành công');
+            if (empty($request->gmc_credential)) {
+                return response()->json(['success' => false, 'message' => 'gmc_credential is required']);
+            }
         }
 
-        $shop->name = $name;
-        $shop->url = $url;
-        $shop->public_url = $publicUrl;
-        $shop->type = $type;
-        $shop->gmc_id = $gmcId;
-        $shop->gmc_credential = 'storage/app/credentials' . $gmcCredential;
-        $shop->api_key = $apiKey;
-        $shop->api_secret = $apiSecret;
-        $shop->active = ($active || $active == "true") ? 1 : 0;
+        $shop->fill($request->all());
+        $shop->active = $request->active == 'true';
+        if (!empty($request->gmc_credential) && (string)$request->gmc_credential !== 'null') {
+            $gmcFileName = $request->file('gmc_credential')->getClientOriginalName();
+            $shop->gmc_credential = $request->file('gmc_credential')->storeAs('credentials', $gmcFileName);
+        } else {
+            unset($shop->gmc_credential);
+        }
         $shop->save();
 
+
+        $message = __('Cập nhật shop thành công');
         if ($isNewShop) {
+            $message = __('Thêm shop thành công');
             SyncShopbase::dispatch($shop->id, 0);
         }
+
         return response()->json([
             'status' => 'success',
             'message' => $message,
@@ -185,10 +188,10 @@ class ShopController extends Controller
      */
     public function destroy($id)
     {
-        $dataToUpdate = Shop::where('id', $id)->first();
-
-        if ($dataToUpdate) {
-            $dataToUpdate->delete();
+        if ($this->shopRepository->delete($id)) {
+            // Xóa hết product, raw product
+            $this->productRepository->deleteManyBySpecificField('shop_id', $id);
+            $this->rawProductRepository->deleteManyBySpecificField('shop_id', $id);
 
             return response()->json([
                 'status' => 'success',
@@ -215,7 +218,7 @@ class ShopController extends Controller
 
         if (!isset($shop->sync_status) && $shop->sync_status == Shop::SHOP_SYNC_RUNNING) {
             return response()->json([
-                'success' => true,
+                'status' => 'success',
                 'message' => 'You submitted the request before, it has already been added to the queue'
             ]);
         }
@@ -224,7 +227,7 @@ class ShopController extends Controller
         SyncShopbase::dispatch($shop->id, $lastSync);
 
         return response()->json([
-            'success' => true,
+            'status' => 'success',
             'data' => ''
         ]);
     }

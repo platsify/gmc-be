@@ -27,7 +27,8 @@ abstract class BaseRepository implements RepositoryInterface
         return $this->model->all();
     }
 
-    public function getPaginate() {
+    public function getPaginate()
+    {
         return $this->model->paginate();
     }
 
@@ -36,17 +37,19 @@ abstract class BaseRepository implements RepositoryInterface
         return $this->model->find($id);
     }
 
-    public function findBySpecificField($fieldName, $fieldValue) {
+    public function findBySpecificField($fieldName, $fieldValue)
+    {
         return $this->model->where($fieldName, $fieldValue)->first();
     }
 
-    public function findManyBySpecificField($fieldName, $fieldValue) {
+    public function findManyBySpecificField($fieldName, $fieldValue)
+    {
         return $this->model->where($fieldName, $fieldValue)->get();
     }
 
     public function create($attributes = [])
     {
-        $attributes = (array) $attributes;
+        $attributes = (array)$attributes;
         return $this->model->create($attributes);
     }
 
@@ -61,7 +64,8 @@ abstract class BaseRepository implements RepositoryInterface
         return false;
     }
 
-    public function upsertBySpecificField($fieldName, $fieldValue, $attributes) {
+    public function upsertBySpecificField($fieldName, $fieldValue, $attributes)
+    {
         $item = $this->findBySpecificField($fieldName, $fieldValue);
         if (!$item) {
             return $this->create($attributes);
@@ -80,5 +84,10 @@ abstract class BaseRepository implements RepositoryInterface
         }
 
         return false;
+    }
+
+    public function deleteManyBySpecificField($fieldName, $fieldValue): bool
+    {
+        return $this->model->where($fieldName, $fieldValue)->delete();
     }
 }

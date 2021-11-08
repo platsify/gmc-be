@@ -64,6 +64,11 @@ class SyncShopbase implements ShouldQueue
             echo 'Shop not found';
             return;
         }
+
+        if (!$shop->active) {
+            return;
+        }
+
         $this->shop = $shop;
 
         // TODO: Using ShopRepository
@@ -86,7 +91,7 @@ class SyncShopbase implements ShouldQueue
 
     public function countProducts() {
         $sbCountProduct = $this->shopbase->countProducts();
-        if ($sbCountProduct && $sbCountProduct->count) {
+        if ($sbCountProduct && !empty($sbCountProduct->count)) {
             // TODO: Using ShopRepository
             $this->shop->total_product = $sbCountProduct->count;
             $this->shop->save();
@@ -123,7 +128,7 @@ class SyncShopbase implements ShouldQueue
 
                 $insertNewProductCount = 0;
                 foreach ($sbProducts->products as $sbProduct) {
-
+                    $sbProduct->shop_id = $this->shopId;
                     $sinceId = $sbProduct->id;
                     $sbProduct = (object)$sbProduct;
                     $productData = $this->shopbase->mapSbToProduct($sbProduct, $this->shop);
