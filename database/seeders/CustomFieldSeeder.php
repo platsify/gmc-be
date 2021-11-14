@@ -16,15 +16,13 @@ class CustomFieldSeeder extends Seeder
     {
         $fields = [
             'condition' => 'new',
-            'identifierExists' => true,
+            //'identifierExists' => true,
             'adult' => false,
             'material' => 'cotton',
-            'isBundle' => true,
-            'additionalSizeType' => 'regular',
-            'shipping' => '{
-    "price": {"value": 5, "currency": "USD"},
-    "country": "US",
-}',
+            'ageGroup' => 'adult',
+            //'isBundle' => true,
+            //'additionalSizeType' => 'regular',
+            'shipping_price' => 5.05,
         ];
 
         foreach ($fields as $name => $value) {

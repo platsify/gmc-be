@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Jobs\FindProductsFromCategories;
+use App\Jobs\MapProductToProject;
 use App\Jobs\SyncShopbase;
 use App\Models\Product;
 use App\Models\ProductMapCategory;
@@ -84,7 +84,7 @@ class ProjectController extends Controller
             return response()->json(['status' => 'success', 'data' => $result, 'message' => "Cập nhật thành công"]);
         } else {
             $result = $this->projectRepository->create($request->all());
-            FindProductsFromCategories::dispatch($result->_id, $request->categories);
+            MapProductToProject::dispatch($result->_id);
             return response()->json(['status' => 'success', 'data' => $result, 'message' => "Thêm thành công"]);
         }
     }

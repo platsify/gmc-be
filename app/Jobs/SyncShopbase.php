@@ -157,6 +157,7 @@ class SyncShopbase implements ShouldQueue
                     $savedProduct = $this->productRepository->upsertByOriginalId($productData['original_id'], $productData);
 
                     // Upsert raw product
+                    $sbProduct->system_product_id = $savedProduct->id;
                     $this->rawProductRepository->upsertByProductId($savedProduct->id, $sbProduct);
 
                     // Upsert map product, category
