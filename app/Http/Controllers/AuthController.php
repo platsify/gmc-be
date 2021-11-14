@@ -181,7 +181,8 @@ class AuthController extends Controller
      */
     public function getUserDataFromFirebase($id_token)
     {
-        $api_key = 'AIzaSyC8Sbz4pRULy67qek8wIWxncatcKeqz304';
+
+        $api_key = 'AIzaSyCoHMzoUw6aX8gnsST7gz_XBD-MPOnXJcY';
 
         $curl = curl_init();
 
