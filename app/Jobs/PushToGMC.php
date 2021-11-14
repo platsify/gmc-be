@@ -61,13 +61,17 @@ class PushToGMC implements ShouldQueue
             }
         }
 
-        ProductMapProjects::where('project_id', $project->id)->where('synced', false)->chunk(10, function ($maps) use ($project, $shop) {
+        ProductMapProjects::where('project_id', $project->id)->where('synced', false)->chunk(10, function ($maps) use ($project, $shop, $defaultValues) {
             foreach ($maps as $map) {
                 $rawProduct = RawProduct::where('system_product_id', $map->product_id)->first();
                 if (!$rawProduct) {
                     return Command::SUCCESS;
                 }
 
+                if (!$rawProduct->variants) {
+                    print_r($rawProduct->id);
+                    continue;
+                }
 
                 // Các field có thể ghi đè
                 //Adult, Gender, shipping_price, ageGroup, color
@@ -154,12 +158,12 @@ class PushToGMC implements ShouldQueue
                     $shipping->country('us');
                     $gmcData->shipping($shipping);
 
-                    $gmcData->offerId($map->product_id);
+                    $gmcData->offerId($variant->id);
                     $gmcData->taxes(['country'=> 'us', 'rate' => 6]);
                     $gmcData->gtin($variant->barcode);
                     $gmcData->condition('new');
                     $gmcData->brand($shop->name);
-                    $gmcData->itemGroupId($rawProduct->system_product_id);
+                    //$gmcData->itemGroupId($rawProduct->system_product_id);
 
 
                     //print_r($gmcData);
@@ -174,6 +178,8 @@ class PushToGMC implements ShouldQueue
                     })->catch(function($e){
                         echo($e->getResponse()->getBody()->getContents());
                     });
+
+                    echo "\n";
 
                 }
 

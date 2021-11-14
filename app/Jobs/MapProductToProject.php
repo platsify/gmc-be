@@ -54,6 +54,7 @@ class MapProductToProject implements ShouldQueue
         }
 
         $rawProductsQuery->chunk(1000,  function($rawProducts) {
+            echo count($rawProducts);
             foreach ($rawProducts as $rawProduct) {
                 $mapped = ProductMapProjects::where('product_id', $rawProduct->system_product_id)->where('project_id', $this->projectId)->first();
                 if (!$mapped) {
@@ -66,5 +67,6 @@ class MapProductToProject implements ShouldQueue
             }
         });
 
+        PushToGMC::dispatch($project->id);
     }
 }

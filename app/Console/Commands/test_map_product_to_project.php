@@ -47,9 +47,9 @@ class test_map_product_to_project extends Command
      */
     public function handle()
     {
-        //MapProductToProject::dispatch('618d4588656c00005b00064d');
+        MapProductToProject::dispatch('6191432bcc1f0000f6002dd6');
         //return;
-        PushToGMC::dispatch('618d4588656c00005b00064d');
+        //PushToGMC::dispatch('6191432bcc1f0000f6002dd6');
 //
 //        $project = Project::find('618d4588656c00005b00064d');
 //        if (!$project) {
