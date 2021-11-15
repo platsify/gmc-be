@@ -13,7 +13,7 @@ class CustomFieldController extends Controller
      *
      * @return JsonResponse
      */
-    public function index()
+    public function index(Request $request)
     {
         $perPage = isset($request->per_page) ? (int)$request->per_page : 20;
         $sort = $request->sort ?? 'id';
