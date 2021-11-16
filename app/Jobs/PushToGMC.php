@@ -166,21 +166,7 @@ class PushToGMC implements ShouldQueue
                     //$gmcData->itemGroupId($rawProduct->system_product_id);
 
 
-                    //print_r($gmcData);
-                    ProductApi::merchant([
-                        'app_name' => $shop->name,
-                        'merchant_id' => $shop->gmc_id,
-                        'client_credentials_path' => storage_path($shop->gmc_credential)
-                    ])->insert($gmcData)->then(function($response){
-                        echo 'Product inserted';
-                    })->otherwise(function($response){
-                        echo 'Insert failed';
-                    })->catch(function($e){
-                        echo($e->getResponse()->getBody()->getContents());
-                    });
-
-                    echo "\n";
-
+                    PushSingleVariationToGMC::dispatch($shop, $gmcData);
                 }
 
                 $map->synced = true;
