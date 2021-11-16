@@ -29,9 +29,10 @@ class ProjectController extends Controller
     /**
      * Display a listing of the resource.
      *
+     * @param Request $request
      * @return JsonResponse
      */
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
         $perPage = isset($request->per_page) ? (int)$request->per_page : 10;
         $sort = $request->sort ?? 'id';

@@ -12,15 +12,17 @@ class CategoryController extends Controller
 {
     private $categoryRepository;
 
-    public function __construct(CategoryRepositoryInterface $categoryRepository) {
+    public function __construct(CategoryRepositoryInterface $categoryRepository)
+    {
         $this->categoryRepository = $categoryRepository;
     }
+
     /**
      * Display a listing of the resource.
      *
      * @return JsonResponse
      */
-    public function index()
+    public function index(Request $request)
     {
         $perPage = isset($request->per_page) ? (int)$request->per_page : 50;
         $sort = $request->sort ?? 'id';
@@ -46,8 +48,9 @@ class CategoryController extends Controller
         return response()->json($query);
     }
 
-    public function getCategoryByShop($shopId) {
-        $items =  $this->categoryRepository->findManyBySpecificField('shop_id', $shopId);
+    public function getCategoryByShop($shopId)
+    {
+        $items = $this->categoryRepository->findManyBySpecificField('shop_id', $shopId);
         return response()->json(['status' => 'success', 'data' => $items]);
     }
 
