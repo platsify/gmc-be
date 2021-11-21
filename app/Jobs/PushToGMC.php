@@ -22,6 +22,8 @@ class PushToGMC implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
+	public $timeout = 0;
+	
     private $projectId;
 
     /**

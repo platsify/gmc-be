@@ -110,7 +110,7 @@ class ShopController extends Controller
         $shop->fill($request->all());
         $shop->active = $request->active == 'true';
         if (!empty($request->gmc_credential) && (string)$request->gmc_credential !== 'null') {
-            $gmcFileName = $request->file('gmc_credential')->getClientOriginalName();
+            $gmcFileName = time().$request->file('gmc_credential')->getClientOriginalName();
             $shop->gmc_credential = $request->file('gmc_credential')->storeAs('credentials', $gmcFileName);
         } else {
             unset($shop->gmc_credential);

@@ -15,6 +15,10 @@ class Project extends Model
 
     public function getCategoriesAttribute($value)
     {
+		if (empty($value)) {
+			return array();
+		}
+		
         $get = Category::whereIn('_id', $value)->get()->toArray();
         return $get ?? $value;
     }
