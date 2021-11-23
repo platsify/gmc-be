@@ -151,7 +151,11 @@ class PushToGMC implements ShouldQueue
                     }
                 }
 
+//echo $rawProduct->_id."\n";
+$variationCount = 0;
                 foreach ($rawProduct->variants as $variant) {
+					//echo $variationCount."\n";
+					$variationCount ++;
                     $variant = (object) $variant;
 
                     // Thay thế default value
@@ -163,13 +167,15 @@ class PushToGMC implements ShouldQueue
                     }
 
                     // Loại bỏ các sản phẩm có Size nhưng ko phải S và Throw
-                    if ($rawProduct->options[$sizeOption] == 'Size' && !in_array($size, ['S','Throw', 'Tween', 'Twin'])) {
+					//echo $rawProduct->options[$sizeOption-1]['name'] . ' = ' .$size."\n";
+                    if ($rawProduct->options[$sizeOption-1]['name'] == 'Size' && !in_array($size, ['S','Throw', 'Tween', 'Twin'])) {
+						//echo 'Bỏ qua'. "\n";
                         continue;
                     }
 
                     //  Điều kiện lọc
                     if ($project->require_gtin && empty($variant->barcode)) {
-                        echo 'Bỏ qua vì yêu cầu gtin mà variation này ko có';
+                        // echo 'Bỏ qua vì yêu cầu gtin mà variation này ko có';
                         continue;
                     }
 
@@ -201,7 +207,8 @@ class PushToGMC implements ShouldQueue
                     $gmcData->identifierExists($identifierExists);
                     $gmcData->gender($gender);
                     $gmcData->adult($adult);
-                    $gmcData->title($rawProduct->title . ' - ' . $variant->title);
+                    //$gmcData->title(mb_substr($rawProduct->title, 0, 150 - mb_strlen($variant->title)) . ' - ' . $variant->title);
+					$gmcData->title(mb_substr($rawProduct->title, 0, 150));
                     $gmcData->description($rawProduct->body_html);
                     //$gmcData->id($gmcData->channel . ':'.$gmcData->contentLanguage.':'.$gmcData->targetCountry.':'.$gmcData->offerId);
                     $gmcData->link(rtrim( $shop->public_url, '/').'/'.$rawProduct->handle);
@@ -211,6 +218,7 @@ class PushToGMC implements ShouldQueue
                     $gmcData->online('online');
                     $gmcData->inStock(true);
                     $gmcData->price($variant->price, 'USD');
+					$gmcData->country($shipFromCountry);
                     $shipping = new ProductShipping();
                     $shipping->price($shippingPrice, 'USD');
                     $shipping->country($shipFromCountry);
@@ -223,30 +231,29 @@ class PushToGMC implements ShouldQueue
                     $gmcData->condition('new');
                     $gmcData->brand($shop->name);
                     $gmcData->itemGroupId($variant->id);
-                    $gmcData->customAttributes(['count' => $count]);
 
                     $countCustomLabel = 0;
-                    foreach($rawProduct->productMapCategories AS $category) {
-                        if ($category->category) {
+                    foreach($rawProduct->productMapCategories AS $productCategory) {
+                        if ($productCategory->category) {
                             if ($countCustomLabel == 0) {
-                                $gmcData->customLabel0($category->name);
+                                $gmcData->customLabel0($productCategory->category->name);
                             }
                             if ($countCustomLabel == 1) {
-                                $gmcData->customLabel1($category->name);
+                                $gmcData->customLabel1($productCategory->category->name);
                             }
                             if ($countCustomLabel == 2) {
-                                $gmcData->customLabel2($category->name);
+                                $gmcData->customLabel2($productCategory->category->name);
                             }
                             if ($countCustomLabel == 3) {
-                                $gmcData->customLabel3($category->name);
+                                $gmcData->customLabel3($productCategory->category->name);
                             }
                             if ($countCustomLabel == 4) {
-                                $gmcData->customLabel4($category->name);
+                                $gmcData->customLabel4($productCategory->category->name);
                             }
                             $countCustomLabel++;
                             if ($countCustomLabel == 4) {
                                 break;
-                            }
+                            }  
                         }
                     }
 
