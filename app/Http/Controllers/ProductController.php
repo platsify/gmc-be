@@ -100,6 +100,6 @@ class ProductController extends Controller
         foreach ($ids as $id) {
             DeleteSingleProduct::dispatch($shop, $id);
         }
-        return response()->json(['status' => 'success', 'data' => '']);
+        return response()->json(['status' => 'success', 'message' => 'Products will be deleted in 5 minutes', 'data' => '']);
     }
 }
