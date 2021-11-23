@@ -91,8 +91,7 @@ class ProductController extends Controller
 
 
     public function deleteManyProducts(Request $request) {
-        $shopId = $request->shop_id;
-        $shop = Shop::where('_id', $shopId)->first();
+        $shop = Shop::where('gmc_id', $request->gmc_id)->first();
         if (!$shop) {
             return response()->json(['status' => 'error', 'message' => 'Shop not found']);
         }
