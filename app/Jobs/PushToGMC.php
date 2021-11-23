@@ -85,7 +85,7 @@ class PushToGMC implements ShouldQueue
                 $size = 'Free size';
 
                 $count = 1;
-                $category = '2271';
+                $category = '';
                 $multipack = 1;
                 $material = 1;
                 $isBundle = true;
@@ -138,9 +138,13 @@ class PushToGMC implements ShouldQueue
                     $shipFromCountry = $defaultValues['shipFromCountry'];
                 }
 
+                // Nếu ko có category thì ko đẩy
+                if (empty($category)) {
+                    continue;
+                }
                 // Tìm số thự tự của color và size trong options
-                $colorOption = 2;
-                $sizeOption = 1;
+                $colorOption = 99999;
+                $sizeOption = 99999;
                 foreach ($rawProduct->options as $item) {
                     $item = (object) $item;
                     if ($item->name == 'Size') {
@@ -214,7 +218,6 @@ $variationCount = 0;
                     $gmcData->link(rtrim( $shop->public_url, '/').'/'.$rawProduct->handle);
                     $gmcData->image($rawProduct->image['src']);
                     $gmcData->lang('en');
-                    $gmcData->country('us');
                     $gmcData->online('online');
                     $gmcData->inStock(true);
                     $gmcData->price($variant->price, 'USD');
@@ -238,22 +241,22 @@ $variationCount = 0;
                             if ($countCustomLabel == 0) {
                                 $gmcData->customLabel0($productCategory->category->name);
                             }
-                            if ($countCustomLabel == 1) {
-                                $gmcData->customLabel1($productCategory->category->name);
-                            }
-                            if ($countCustomLabel == 2) {
-                                $gmcData->customLabel2($productCategory->category->name);
-                            }
-                            if ($countCustomLabel == 3) {
-                                $gmcData->customLabel3($productCategory->category->name);
-                            }
-                            if ($countCustomLabel == 4) {
-                                $gmcData->customLabel4($productCategory->category->name);
-                            }
+//                            if ($countCustomLabel == 1) {
+//                                $gmcData->customLabel1($productCategory->category->name);
+//                            }
+//                            if ($countCustomLabel == 2) {
+//                                $gmcData->customLabel2($productCategory->category->name);
+//                            }
+//                            if ($countCustomLabel == 3) {
+//                                $gmcData->customLabel3($productCategory->category->name);
+//                            }
+//                            if ($countCustomLabel == 4) {
+//                                $gmcData->customLabel4($productCategory->category->name);
+//                            }
                             $countCustomLabel++;
                             if ($countCustomLabel == 4) {
                                 break;
-                            }  
+                            }
                         }
                     }
 

@@ -26,7 +26,9 @@ Route::middleware('auth:sanctum')->get('auth/user', function (Request $request) 
 Route::post('auth/login', [AuthController::class, 'login']);
 Route::post('auth/logout', [AuthController::class, 'logout']);
 
+Route::post('delete-many-product', [ProductController::class, 'deleteManyProducts']);
 Route::resource('product', ProductController::class);
+
 Route::apiResource('shop', ShopController::class);
 Route::apiResource('project', ProjectController::class);
 

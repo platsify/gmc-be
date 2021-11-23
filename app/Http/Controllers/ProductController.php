@@ -2,17 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\DeleteSingleProduct;
 use App\Models\Product;
-use App\Repositories\Product\ProductMapCategoryRepositoryInterface;
+use App\Models\Shop;
+use App\Repositories\ProductMapCategory\ProductMapCategoryRepositoryInterface;
 use Illuminate\Http\Request;
 use MOIREI\GoogleMerchantApi\Facades\ProductApi;
 use MOIREI\GoogleMerchantApi\Contents\Product\Product as GMProduct;
 
 class ProductController extends Controller
 {
-    /**
-     * @var ProductMapCategoryRepositoryInterface
-     */
     protected $productRepo;
 
     public function __construct(ProductMapCategoryRepositoryInterface $productRepo)
@@ -88,5 +87,20 @@ class ProductController extends Controller
     public function destroy(Product $product)
     {
         //
+    }
+
+
+    public function deleteManyProducts(Request $request) {
+        $shopId = $request->shop_id;
+        $shop = Shop::where('_id', $shopId)->first();
+        if (!$shop) {
+            return response()->json(['status' => 'error', 'message' => 'Shop not found']);
+        }
+
+        $ids = preg_split('/\r\n|\r|\n/', $request->ids);
+        foreach ($ids as $id) {
+            DeleteSingleProduct::dispatch($shop, $id);
+        }
+        return response()->json(['status' => 'success', 'data' => '']);
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\DeleteSingleProduct;
 use App\Jobs\SyncShopbase;
 use App\Models\Project;
 use App\Models\Shop;
