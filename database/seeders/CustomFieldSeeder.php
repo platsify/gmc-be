@@ -23,6 +23,15 @@ class CustomFieldSeeder extends Seeder
             //'isBundle' => true,
             //'additionalSizeType' => 'regular',
             'shipping_price' => 5.05,
+            'count' => 1,
+            'category' => '2271',
+            'multipack' => 1,
+            'isBundle' => true,
+            'pattern' => 'flower',
+            'sizeType' => 'regular',
+            'sizeSystem' => 'US',
+            'identifierExists' => false,
+            'shipFromCountry' => 'US'
         ];
 
         foreach ($fields as $name => $value) {

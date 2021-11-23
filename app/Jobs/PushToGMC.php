@@ -23,7 +23,7 @@ class PushToGMC implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
 	public $timeout = 0;
-	
+
     private $projectId;
 
     /**
@@ -83,17 +83,59 @@ class PushToGMC implements ShouldQueue
                 $ageGroup = 'adult';
                 $color = 'multicolor';
                 $size = 'Free size';
-                if (isset($defaultValues['adults'])) {
+
+                $count = 1;
+                $category = '2271';
+                $multipack = 1;
+                $material = 1;
+                $isBundle = true;
+                $pattern = 'flower';
+                $sizeType = 'regular';
+                $sizeSystem = 'US';
+                $identifierExists = false;
+                $shipFromCountry = 'US';
+
+                if (!empty($defaultValues['adults'])) {
                     $adult = (boolean)$defaultValues['adults'];
                 }
-                if (isset($defaultValues['gender'])) {
+                if (!empty($defaultValues['gender'])) {
                     $gender = $defaultValues['gender'];
                 }
-                if (isset($defaultValues['shipping_price'])) {
+                if (!empty($defaultValues['shipping_price'])) {
                     $shippingPrice = $defaultValues['shipping_price'];
                 }
-                if (isset($defaultValues['ageGroup'])) {
+                if (!empty($defaultValues['ageGroup'])) {
                     $ageGroup = $defaultValues['ageGroup'];
+                }
+                if (!empty($defaultValues['count'])) {
+                    $count = $defaultValues['count'];
+                }
+                if (!empty($defaultValues['category'])) {
+                    $category = $defaultValues['category'];
+                }
+                if (!empty($defaultValues['multipack'])) {
+                    $multipack = $defaultValues['multipack'];
+                }
+                if (!empty($defaultValues['material'])) {
+                    $material = $defaultValues['material'];
+                }
+                if (!empty($defaultValues['isBundle'])) {
+                    $isBundle = $defaultValues['isBundle'];
+                }
+                if (!empty($defaultValues['pattern'])) {
+                    $pattern = $defaultValues['pattern'];
+                }
+                if (!empty($defaultValues['sizeType'])) {
+                    $sizeType = $defaultValues['sizeType'];
+                }
+                if (!empty($defaultValues['sizeSystem'])) {
+                    $sizeSystem = $defaultValues['sizeSystem'];
+                }
+                if (!empty($defaultValues['identifierExists'])) {
+                    $identifierExists = $defaultValues['identifierExists'];
+                }
+                if (!empty($defaultValues['shipFromCountry'])) {
+                    $shipFromCountry = $defaultValues['shipFromCountry'];
                 }
 
                 // Tìm số thự tự của color và size trong options
@@ -112,23 +154,6 @@ class PushToGMC implements ShouldQueue
                 foreach ($rawProduct->variants as $variant) {
                     $variant = (object) $variant;
 
-                    //  Điều kiện lọc
-                    if ($project->require_gtin && empty($variant->barcode)) {
-                        continue;
-                    }
-
-                    if (!empty($project->only_option1) && (!isset($variant->option1) || $variant->option1 != $project->only_option1)) {
-                        //echo 'Option 1 not match';
-                        continue;
-                    }
-                    if (!empty($project->only_option2) && (!isset($variant->option2) || $variant->option2 != $project->only_option2)) {
-                        //echo 'Option 2 not match';
-                        continue;
-                    }
-                    if (!empty($project->only_option3) && (!isset($variant->option3) || $variant->option3 != $project->only_option3)) {
-                        continue;
-                    }
-
                     // Thay thế default value
                     if (!empty($variant->{'option'.$sizeOption})) {
                         $size = $variant->{'option'.$sizeOption};
@@ -137,11 +162,43 @@ class PushToGMC implements ShouldQueue
                         $color = $variant->{'option'.$colorOption};
                     }
 
+                    // Loại bỏ các sản phẩm có Size nhưng ko phải S và Throw
+                    if ($rawProduct->options[$sizeOption] == 'Size' && !in_array($size, ['S','Throw', 'Tween', 'Twin'])) {
+                        continue;
+                    }
+
+                    //  Điều kiện lọc
+                    if ($project->require_gtin && empty($variant->barcode)) {
+                        echo 'Bỏ qua vì yêu cầu gtin mà variation này ko có';
+                        continue;
+                    }
+
+//                    if (!empty($project->only_option1) && (!isset($variant->option1) || $variant->option1 != $project->only_option1)) {
+//                        //echo 'Option 1 not match';
+//                        continue;
+//                    }
+//                    if (!empty($project->only_option2) && (!isset($variant->option2) || $variant->option2 != $project->only_option2)) {
+//                        //echo 'Option 2 not match';
+//                        continue;
+//                    }
+//                    if (!empty($project->only_option3) && (!isset($variant->option3) || $variant->option3 != $project->only_option3)) {
+//                        continue;
+//                    }
+
+
                     // Map vào GMC
                     $gmcData = new Product();
                     $gmcData->ageGroup($ageGroup);
                     $gmcData->color($color);
                     $gmcData->sizes($size);
+                    $gmcData->sizeType($sizeType);
+                    $gmcData->sizeSystem($sizeSystem);
+                    $gmcData->multipack($multipack);
+                    $gmcData->category($category);
+                    $gmcData->material($material);
+                    $gmcData->pattern($pattern);
+                    $gmcData->isBundle($isBundle);
+                    $gmcData->identifierExists($identifierExists);
                     $gmcData->gender($gender);
                     $gmcData->adult($adult);
                     $gmcData->title($rawProduct->title . ' - ' . $variant->title);
@@ -154,18 +211,18 @@ class PushToGMC implements ShouldQueue
                     $gmcData->online('online');
                     $gmcData->inStock(true);
                     $gmcData->price($variant->price, 'USD');
-
                     $shipping = new ProductShipping();
                     $shipping->price($shippingPrice, 'USD');
-                    $shipping->country('us');
+                    $shipping->country($shipFromCountry);
                     $gmcData->shipping($shipping);
-
                     $gmcData->offerId($variant->id);
-                    $gmcData->taxes(['country'=> 'us', 'rate' => 6]);
-                    $gmcData->gtin($variant->barcode);
+                    $gmcData->taxes(['country'=> 'us', 'rate' => 6, 'taxShip' => true]);
+                    if (!empty($variant->barcode)) {
+                        $gmcData->gtin($variant->barcode);
+                    }
                     $gmcData->condition('new');
                     $gmcData->brand($shop->name);
-                    //$gmcData->itemGroupId($rawProduct->system_product_id);
+                    $gmcData->itemGroupId($variant->id);
 
 
                     PushSingleVariationToGMC::dispatch($shop, $gmcData);
