@@ -43,21 +43,43 @@ class MapProductToProject implements ShouldQueue
             echo 'Project not found';
             return;
         }
-        $productIds = ProductMapCategory::whereIn('category_id', $project->categories)->pluck('product_id')->toArray();
+
+        $catIds = [];
+        foreach($project->categories AS $category) {
+            $catIds[] = $category['_id'];
+        }
+        $productIds = ProductMapCategory::whereIn('category_id', $catIds)->pluck('product_id')->toArray();
         $rawProductsQuery = RawProduct::query();
         //$rawProductsQuery->select('shop_id', 'system_product_id');
         $rawProductsQuery->where('shop_id', $project->shop_id);
         $rawProductsQuery->whereIn('system_product_id', $productIds);
 
-        if ($project->require_gtin) {
-            $rawProductsQuery->whereHas('variants', function($query) {
-                $query->whereIn('barcode', '!=', '');
-            });
-        }
+        // if ($project->require_gtin) {
+        //     $rawProductsQuery->whereHas('variants', function($query) {
+        //         $query->whereIn('barcode', '!=', '');
+        //     });
+        // }
 
-        $rawProductsQuery->chunk(1000,  function($rawProducts) {
-            echo count($rawProducts);
+
+        $rawProductsQuery->chunk(1000,  function($rawProducts) use ($project) {
             foreach ($rawProducts as $rawProduct) {
+                // TODO: Xu ly san pham ko co variation
+                if (!$rawProduct->variants) {
+                    continue;
+                }
+                $foundGtin = false;
+                foreach($rawProduct->variants AS $variation) {
+                    //  Điều kiện lọc
+                    if ($project->require_gtin && !empty($variant->barcode)) {
+                        $foundGtin = true;
+                        break;
+                    }
+                }
+                if ($project->require_gtin && !$foundGtin) {
+                    echo 'Project nay yeu cau GTIN nhung variation nay lai ko co barcode';
+                    continue;
+                }
+
                 $mapped = ProductMapProjects::where('product_id', $rawProduct->system_product_id)->where('project_id', $this->projectId)->first();
                 if (!$mapped) {
                     ProductMapProjects::create([
@@ -69,6 +91,7 @@ class MapProductToProject implements ShouldQueue
             }
         });
 
+        echo 'Tao job push GMC';
         PushToGMC::dispatch($project->id);
     }
 }

@@ -51,7 +51,9 @@ class test_map_product_to_project extends Command
     public function handle()
     {
         $projectId = $this->argument('id');
-        //MapProductToProject::dispatch($productId, true);
+        MapProductToProject::dispatch($projectId, true);
+        return;
+
         //SyncShopbase::dispatch($productId, true);
 		
 		$project = Project::where('_id', $projectId)->first();

@@ -37,7 +37,7 @@ class PushSingleVariationToGMC implements ShouldQueue
         ProductApi::merchant([
             'app_name' => $this->shop->name,
             'merchant_id' => $this->shop->gmc_id,
-            'client_credentials_path' => storage_path($this->shop->gmc_credential)
+            'client_credentials_path' => storage_path('app/'.$this->shop->gmc_credential)
         ])->insert($this->gmcData)->then(function($response){
             echo 'Product inserted';
         })->otherwise(function($response){

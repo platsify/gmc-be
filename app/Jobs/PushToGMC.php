@@ -144,7 +144,7 @@ class PushToGMC implements ShouldQueue
                     $gmcData->sizes($size);
                     $gmcData->gender($gender);
                     $gmcData->adult($adult);
-                    $gmcData->title($variant->title);
+                    $gmcData->title($rawProduct->title . ' - ' . $variant->title);
                     $gmcData->description($rawProduct->body_html);
                     //$gmcData->id($gmcData->channel . ':'.$gmcData->contentLanguage.':'.$gmcData->targetCountry.':'.$gmcData->offerId);
                     $gmcData->link(rtrim( $shop->public_url, '/').'/'.$rawProduct->handle);
