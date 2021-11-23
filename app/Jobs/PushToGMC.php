@@ -65,7 +65,7 @@ class PushToGMC implements ShouldQueue
 
         ProductMapProjects::where('project_id', $project->id)->where('synced', false)->chunk(10, function ($maps) use ($project, $shop, $defaultValues) {
             foreach ($maps as $map) {
-                $rawProduct = RawProduct::where('system_product_id', $map->product_id)->first();
+                $rawProduct = RawProduct::where('system_product_id', $map->product_id)->with('productMapCategories', 'productMapCategories.category')->first();
                 if (!$rawProduct) {
                     return Command::SUCCESS;
                 }
@@ -223,7 +223,32 @@ class PushToGMC implements ShouldQueue
                     $gmcData->condition('new');
                     $gmcData->brand($shop->name);
                     $gmcData->itemGroupId($variant->id);
+                    $gmcData->customAttributes(['count' => $count]);
 
+                    $countCustomLabel = 0;
+                    foreach($rawProduct->productMapCategories AS $category) {
+                        if ($category->category) {
+                            if ($countCustomLabel == 0) {
+                                $gmcData->customLabel0($category->name);
+                            }
+                            if ($countCustomLabel == 1) {
+                                $gmcData->customLabel1($category->name);
+                            }
+                            if ($countCustomLabel == 2) {
+                                $gmcData->customLabel2($category->name);
+                            }
+                            if ($countCustomLabel == 3) {
+                                $gmcData->customLabel3($category->name);
+                            }
+                            if ($countCustomLabel == 4) {
+                                $gmcData->customLabel4($category->name);
+                            }
+                            $countCustomLabel++;
+                            if ($countCustomLabel == 4) {
+                                break;
+                            }
+                        }
+                    }
 
                     PushSingleVariationToGMC::dispatch($shop, $gmcData);
                 }

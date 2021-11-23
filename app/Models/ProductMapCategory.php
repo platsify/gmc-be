@@ -11,4 +11,7 @@ class ProductMapCategory extends Model
     use HasFactory;
     protected $guarded = ['_id'];
 
+    public function category() {
+        return $this->belongsTo(Category::class);
+    }
 }
