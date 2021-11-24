@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Models\Product;
 use App\Models\ProductMapCategory;
 use App\Models\Shop;
 use App\Repositories\Category\CategoryRepositoryInterface;
@@ -108,7 +109,11 @@ class SyncShopbase implements ShouldQueue
             // Nếu quét lần đầu, thì sẽ rất nhiều SP, mà shopbase chỉ cho 10k sản phẩm phân trang, vì vậy chuyển sang quét theo id
             // TỪ lần sau, chỉ update lại, nên sẽ order by updated_at
 
-            $sinceId = 0;
+			$sinceId = 0;
+			if ($this->lastSync == 0) {
+				$lastProductttt = Product::where('shop_id', $this->shopId)->orderBy('original_id', 'ASC')->first();
+				$sinceId = str_replace($this->shopId.'__', '', $lastProductttt->original_id);
+			}
             $lastUpdatedAt = $this->lastSync;
             $page = 0;
 
@@ -175,8 +180,7 @@ class SyncShopbase implements ShouldQueue
 
                 // TODO: Using ShopRepository
                 // Update crawled count
-                $crawledProductCount = $this->shop->crawled_product?: 0;
-                $this->shop->crawled_product = $crawledProductCount + $insertNewProductCount;
+                 $this->shop->crawled_product = Product::where('shop_id', $this->shopId)->count();
                 $this->shop->save();
 
             } while (true);

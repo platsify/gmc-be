@@ -211,8 +211,7 @@ $variationCount = 0;
                     $gmcData->identifierExists($identifierExists);
                     $gmcData->gender($gender);
                     $gmcData->adult($adult);
-                    //$gmcData->title(mb_substr($rawProduct->title, 0, 150 - mb_strlen($variant->title)) . ' - ' . $variant->title);
-					$gmcData->title(mb_substr($rawProduct->title, 0, 150));
+                    $gmcData->title(mb_substr($rawProduct->title . ' - ' . $variant->title));
                     $gmcData->description($rawProduct->body_html);
                     //$gmcData->id($gmcData->channel . ':'.$gmcData->contentLanguage.':'.$gmcData->targetCountry.':'.$gmcData->offerId);
                     $gmcData->link(rtrim( $shop->public_url, '/').'/'.$rawProduct->handle);
@@ -234,7 +233,8 @@ $variationCount = 0;
                     $gmcData->condition('new');
                     $gmcData->brand($shop->name);
                     $gmcData->itemGroupId($variant->id);
-
+					$gmcData->customValues(['ships_from_country' => 'US']);
+					
                     $countCustomLabel = 0;
                     foreach($rawProduct->productMapCategories AS $productCategory) {
                         if ($productCategory->category) {
