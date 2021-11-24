@@ -82,11 +82,11 @@ class ProjectController extends Controller
         }
         if ($project) {
             $result = $this->projectRepository->update($request->_id, $request->all());
-            MapProductToProject::dispatch($result->_id);
+            MapProductToProject::dispatch($result->_id)->onQueue('gmc');
             return response()->json(['status' => 'success', 'data' => $result, 'message' => "Cập nhật thành công"]);
         } else {
             $result = $this->projectRepository->create($request->all());
-            MapProductToProject::dispatch($result->_id);
+            MapProductToProject::dispatch($result->_id)->onQueue('gmc');
             return response()->json(['status' => 'success', 'data' => $result, 'message' => "Thêm thành công"]);
         }
     }

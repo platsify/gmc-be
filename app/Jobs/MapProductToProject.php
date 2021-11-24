@@ -92,6 +92,6 @@ class MapProductToProject implements ShouldQueue
         });
 
         echo 'Tao job push GMC';
-        PushToGMC::dispatch($project->id);
+        PushToGMC::dispatch($project->id)->onQueue('gmc');
     }
 }

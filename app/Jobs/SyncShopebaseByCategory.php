@@ -20,6 +20,8 @@ class SyncShopebaseByCategory implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
+	public $timeout = 0;
+
     private $category, $lastSync, $shop, $shopId, $shopbase, $categoryRepository;
     /**
      * Create a new job instance.
@@ -46,10 +48,6 @@ class SyncShopebaseByCategory implements ShouldQueue
         // TỪ lần sau, chỉ update lại, nên sẽ order by updated_at
 
         $sinceId = 0;
-        if ($this->lastSync == 0) {
-            $lastProductttt = Product::where('shop_id', $this->shopId)->orderBy('original_id', 'ASC')->first();
-            $sinceId = str_replace($this->shopId.'__', '', $lastProductttt->original_id);
-        }
         $lastUpdatedAt = $this->lastSync;
         $page = 0;
 
@@ -81,7 +79,7 @@ class SyncShopebaseByCategory implements ShouldQueue
                 $existingProduct = $productRepository->findBySpecificField('original_id', $productData['original_id']);
                 if ($existingProduct) {
                     // Upsert raw product
-                    $$rawProductRepository->upsertByProductId($existingProduct->id, $sbProduct);
+                    $rawProductRepository->upsertByProductId($existingProduct->id, $sbProduct);
 
                     // Upsert map product, category
                     $mapProductCategory = array('product_id' => $existingProduct->id, 'category_id' => $this->category->id, 'pici' => $existingProduct->id . '__' . $this->category->id);
@@ -102,7 +100,7 @@ class SyncShopebaseByCategory implements ShouldQueue
 
                 // Upsert raw product
                 $sbProduct->system_product_id = $savedProduct->id;
-                $$rawProductRepository->upsertByProductId($savedProduct->id, $sbProduct);
+                $rawProductRepository->upsertByProductId($savedProduct->id, $sbProduct);
 
                 // Upsert map product, category
                 $mapProductCategory = array('product_id' => $savedProduct->id, 'category_id' => $this->category->id, 'pici' => $savedProduct->id . '__' . $this->category->id);

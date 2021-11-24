@@ -63,6 +63,7 @@ class PushToGMC implements ShouldQueue
             }
         }
 
+		try {
         ProductMapProjects::where('project_id', $project->id)->where('synced', false)->chunk(10, function ($maps) use ($project, $shop, $defaultValues) {
             foreach ($maps as $map) {
                 $rawProduct = RawProduct::where('system_product_id', $map->product_id)->with('productMapCategories', 'productMapCategories.category')->first();
@@ -211,7 +212,7 @@ $variationCount = 0;
                     $gmcData->identifierExists($identifierExists);
                     $gmcData->gender($gender);
                     $gmcData->adult($adult);
-                    $gmcData->title(mb_substr($rawProduct->title . ' - ' . $variant->title));
+                    $gmcData->title(mb_substr($rawProduct->title . ' - ' . $variant->title, 0, 150));
                     $gmcData->description($rawProduct->body_html);
                     //$gmcData->id($gmcData->channel . ':'.$gmcData->contentLanguage.':'.$gmcData->targetCountry.':'.$gmcData->offerId);
                     $gmcData->link(rtrim( $shop->public_url, '/').'/'.$rawProduct->handle);
@@ -233,7 +234,7 @@ $variationCount = 0;
                     $gmcData->condition('new');
                     $gmcData->brand($shop->name);
                     $gmcData->itemGroupId($variant->id);
-					$gmcData->customValues(['ships_from_country' => 'US']);
+					$gmcData->customValues(['ships_from_country' => $shipFromCountry]);
 					
                     $countCustomLabel = 0;
                     foreach($rawProduct->productMapCategories AS $productCategory) {
@@ -260,13 +261,18 @@ $variationCount = 0;
                         }
                     }
 
-                    PushSingleVariationToGMC::dispatch($shop, $gmcData);
+                    PushSingleVariationToGMC::dispatch($shop, $gmcData)->onQueue('gmc');
                 }
 
                 $map->synced = true;
                 $map->save();
             }
         });
+		} catch(\Exception $e) {
+			print_r($e->getFile());
+			echo $e->getMessage()."\n";
+			echo $e->getLine() ."\n";
+		}
         return Command::SUCCESS;
     }
 }
