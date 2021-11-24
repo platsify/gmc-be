@@ -24,8 +24,8 @@ class SyncShopbase implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
 	public $timeout = 0;
-	
-	
+
+
     private $lastSync;
     private $shopId;
 
@@ -88,9 +88,9 @@ class SyncShopbase implements ShouldQueue
 
         // TODO: Using ShopRepository
         // Save done job and last sync
-        $this->shop->sync_status = Shop::SHOP_SYNC_DONE;
-        $this->shop->last_sync = time();
-        $this->shop->save();
+//        $this->shop->sync_status = Shop::SHOP_SYNC_DONE;
+//        $this->shop->last_sync = time();
+//        $this->shop->save();
     }
 
     public function countProducts() {
@@ -106,84 +106,7 @@ class SyncShopbase implements ShouldQueue
     {
         $categories = $this->categoryRepository->findManyBySpecificField('shop_id', $this->shopId);
         foreach ($categories as $category) {
-            // Nếu quét lần đầu, thì sẽ rất nhiều SP, mà shopbase chỉ cho 10k sản phẩm phân trang, vì vậy chuyển sang quét theo id
-            // TỪ lần sau, chỉ update lại, nên sẽ order by updated_at
-
-			$sinceId = 0;
-			if ($this->lastSync == 0) {
-				$lastProductttt = Product::where('shop_id', $this->shopId)->orderBy('original_id', 'ASC')->first();
-				$sinceId = str_replace($this->shopId.'__', '', $lastProductttt->original_id);
-			}
-            $lastUpdatedAt = $this->lastSync;
-            $page = 0;
-
-            do {
-                $page++;
-                $originalCategoryId = str_replace($this->shopId . '__', '', $category->original_id);
-                if ($this->lastSync == 0) {
-                    $queryOptions = ['collection_id' => $originalCategoryId, 'limit' => 250, 'sort_field' => 'id', 'sort_mode' => 'asc', 'since_id' => $sinceId];
-                } else {
-                    $queryOptions = ['collection_id' => $originalCategoryId, 'page' => $page, 'limit' => 250, 'updated_at_min' => Carbon::createFromTimestamp($lastUpdatedAt)->toISOString()];
-                }
-                $sbProducts = $this->shopbase->getProducts($queryOptions);
-                if (!$sbProducts || empty($sbProducts) || empty($sbProducts->products)) {
-                    if (isset($sbProducts->error)) {
-                        Log::error(json_encode($sbProducts));
-                    }
-                    break;
-                }
-
-
-                $insertNewProductCount = 0;
-                foreach ($sbProducts->products as $sbProduct) {
-                    $sbProduct->shop_id = $this->shopId;
-                    $sinceId = $sbProduct->id;
-                    $sbProduct = (object)$sbProduct;
-                    $productData = $this->shopbase->mapSbToProduct($sbProduct, $this->shop);
-
-                    // Ghi đè một số field nếu sản phẩm này đã tồn tại (có thể sẽ ko còn dùng default value nên cần ghi đè)
-                    $existingProduct = $this->productRepository->findBySpecificField('original_id', $productData['original_id']);
-                    if ($existingProduct) {
-                        // Upsert raw product
-                        $this->rawProductRepository->upsertByProductId($existingProduct->id, $sbProduct);
-
-                        // Upsert map product, category
-                        $mapProductCategory = array('product_id' => $existingProduct->id, 'category_id' => $category->id, 'pici' => $existingProduct->id . '__' . $category->id);
-                        $this->productMapCategoryRepository->upsertByPici($mapProductCategory['pici'], $mapProductCategory);
-
-
-                        // Nếu ko có update gì thì next
-                        if (strtotime($sbProduct->updated_at) == $existingProduct->original_last_update) {
-                            echo "Trùng " . $sbProduct->id . " \n";
-                            continue;
-                        }
-                    } else {
-                        $insertNewProductCount ++;
-                    }
-
-                    // Upsert product
-                    $savedProduct = $this->productRepository->upsertByOriginalId($productData['original_id'], $productData);
-
-                    // Upsert raw product
-                    $sbProduct->system_product_id = $savedProduct->id;
-                    $this->rawProductRepository->upsertByProductId($savedProduct->id, $sbProduct);
-
-                    // Upsert map product, category
-                    $mapProductCategory = array('product_id' => $savedProduct->id, 'category_id' => $category->id, 'pici' => $savedProduct->id . '__' . $category->id);
-                    $this->productMapCategoryRepository->upsertByPici($mapProductCategory['pici'], $mapProductCategory);
-
-
-                    // TODO: Upsert custom fields
-
-                    echo "Upsert product $sbProduct->id\n";
-                }
-
-                // TODO: Using ShopRepository
-                // Update crawled count
-                 $this->shop->crawled_product = Product::where('shop_id', $this->shopId)->count();
-                $this->shop->save();
-
-            } while (true);
+            SyncShopebaseByCategory::dispatch($category, $this->lastSync, $this->shop, $this->shopId, $this->shopbase);
         }
     }
 
