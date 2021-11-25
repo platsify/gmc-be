@@ -62,7 +62,7 @@ class PushToGMC implements ShouldQueue
                 $defaultValues[$keyName] = $keyValue;
             }
         }
-		
+
         ProductMapProjects::where('project_id', $project->id)->where('synced', false)->chunk(10, function ($maps) use ($project, $shop, $defaultValues) {
             foreach ($maps as $map) {
                 $rawProduct = RawProduct::where('system_product_id', $map->product_id)->with('productMapCategories', 'productMapCategories.category')->first();
@@ -83,7 +83,7 @@ class PushToGMC implements ShouldQueue
                 $ageGroup = 'adult';
                 $color = 'multicolor';
                 $size = 'Free size';
-
+                $type = '';
                 $count = 1;
                 $category = '';
                 $multipack = 1;
@@ -145,6 +145,7 @@ class PushToGMC implements ShouldQueue
                 // Tìm số thự tự của color và size trong options
                 $colorOption = 99999;
                 $sizeOption = 99999;
+                $typeOption = 9999;
                 foreach ($rawProduct->options as $item) {
                     $item = (object) $item;
                     if ($item->name == 'Size') {
@@ -152,6 +153,9 @@ class PushToGMC implements ShouldQueue
                     }
                     if ($item->name == 'Color') {
                         $colorOption = $item->position;
+                    }
+                    if ($item->name == 'Type') {
+                        $typeOption = $item->position;
                     }
                 }
 
@@ -168,6 +172,23 @@ $variationCount = 0;
                     }
                     if (!empty($variant->{'option'.$colorOption})) {
                         $color = $variant->{'option'.$colorOption};
+                    }
+                    if (!empty($variant->{'option'.$typeOption})) {
+                        $type = $variant->{'option'.$typeOption};
+                    }
+
+                    // Tìm xem SP này có thuộc collection là bedding ko
+                    $isBeddingCollection = false;
+                    foreach($rawProduct->productMapCategories AS $productCategory) {
+                        if ($productCategory->category && strpos(mb_strtolower($productCategory->category->name), 'bedding') !== false) {
+                            $isBeddingCollection = true;
+                            break;
+                        }
+                    }
+                    if ($isBeddingCollection) {
+                        if ($type != 'Quilt Cover + 2 Pillow Cases') {
+                            continue;
+                        }
                     }
 
                     // Loại bỏ các sản phẩm có Size nhưng ko phải S và Throw
@@ -234,7 +255,7 @@ $variationCount = 0;
                     $gmcData->brand($shop->name);
                     $gmcData->itemGroupId($variant->id);
 					//$gmcData->customValues(['ships_from_country' => $shipFromCountry]);
-					
+
                     $countCustomLabel = 0;
                     foreach($rawProduct->productMapCategories AS $productCategory) {
                         if ($productCategory->category) {
