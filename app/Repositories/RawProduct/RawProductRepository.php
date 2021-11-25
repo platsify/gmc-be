@@ -11,6 +11,6 @@ class RawProductRepository extends BaseRepository implements RawProductRepositor
     }
 
     public function upsertByProductId($productId, $attributes) {
-        return $this->upsertBySpecificField('product_id', $productId, $attributes);
+        return $this->upsertBySpecificField('system_product_id', $productId, $attributes);
     }
 }

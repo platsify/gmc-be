@@ -48,6 +48,12 @@ class SyncShopebaseByCategory implements ShouldQueue
         // TỪ lần sau, chỉ update lại, nên sẽ order by updated_at
 
         $sinceId = 0;
+		if ($this->shopId == '619de0cafb2006073f1182b4') {
+			$sinceId = '1000000283437106';
+		}
+		if ($this->shopId == '619de2e0efcd2331f96cc664') {
+			$sinceId = '1000000206103931';
+		}
         $lastUpdatedAt = $this->lastSync;
         $page = 0;
 
