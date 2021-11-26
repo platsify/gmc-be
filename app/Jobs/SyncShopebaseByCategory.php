@@ -54,6 +54,15 @@ class SyncShopebaseByCategory implements ShouldQueue
 		if ($this->shopId == '619de2e0efcd2331f96cc664') {
 			$sinceId = '1000000206103931';
 		}
+		if ($this->shopId == '619fc194fdaadf32c877ea52') {
+			$sinceId = '1000000296801496'; 
+		}
+		if ($this->shopId == '619fc1bdfdaadf32c877ea53') {
+			$sinceId = '1000000293411155'; 
+		}
+		if ($this->shopId == '619de2e0efcd2331f96cc664') {
+			$sinceId = '1000000206103931'; 
+		}
         $lastUpdatedAt = $this->lastSync;
         $page = 0;
 

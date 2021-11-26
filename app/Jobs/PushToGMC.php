@@ -45,11 +45,13 @@ class PushToGMC implements ShouldQueue
     {
         $project = Project::find($this->projectId);
         if (!$project) {
+			echo 'Ko thay project' . "\n";
             return Command::SUCCESS;
         }
 
         $shop = Shop::find($project->shop_id);
         if (!$shop) {
+			echo 'Ko thay shop' . "\n";
             return Command::SUCCESS;
         }
 
@@ -63,10 +65,15 @@ class PushToGMC implements ShouldQueue
             }
         }
 
-        ProductMapProjects::where('project_id', $project->id)->where('synced', false)->chunk(10, function ($maps) use ($project, $shop, $defaultValues) {
+        $maps = ProductMapProjects::where('project_id', $project->id)->where('synced', false)->limit(5000)->get();
+		echo count($maps);
+		
+		//ProductMapProjects::where('project_id', $project->id)->where('synced', false)->chunk(100, function ($maps) use ($project, $shop, $defaultValues);
+		{
             foreach ($maps as $map) {
                 $rawProduct = RawProduct::where('system_product_id', $map->product_id)->with('productMapCategories', 'productMapCategories.category')->first();
                 if (!$rawProduct) {
+					echo 'Ko thay raww' . "\n";
                     return Command::SUCCESS;
                 }
 
@@ -74,7 +81,11 @@ class PushToGMC implements ShouldQueue
                     print_r($rawProduct->id);
                     continue;
                 }
-
+				
+				if (!$rawProduct->image['src']) {
+					continue;
+				}
+				
                 // Các field có thể ghi đè
                 //Adult, Gender, shipping_price, ageGroup, color
                 $shippingPrice = 5.05;
@@ -281,13 +292,10 @@ $variationCount = 0;
                         }
                     }
 
-                    PushSingleVariationToGMC::dispatch($shop, $gmcData)->onQueue('gmc');
+                    PushSingleVariationToGMC::dispatch($shop, $gmcData, $map)->onQueue('gmc');
                 }
-
-                $map->synced = true;
-                $map->save();
             }
-        });
+        };
         return Command::SUCCESS;
     }
 }

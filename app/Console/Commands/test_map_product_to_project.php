@@ -51,7 +51,8 @@ class test_map_product_to_project extends Command
     public function handle()
     {
         $projectId = $this->argument('id');
-        MapProductToProject::dispatch($projectId, true);
+		PushToGMC::dispatch($projectId);
+        //MapProductToProject::dispatch($projectId, true);
         return;
 
         //SyncShopbase::dispatch($productId, true);

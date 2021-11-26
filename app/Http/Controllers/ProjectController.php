@@ -40,6 +40,10 @@ class ProjectController extends Controller
 
         $query = Project::query();
 
+		if (!empty($request->shop_id)) {
+			$query->where('shop_id', $request->shop_id);
+		}
+		
         if (!empty($request->search)) {
             $search = is_numeric($request->search) ? (int)$request->search : $request->search;
             $colsToSearch = [

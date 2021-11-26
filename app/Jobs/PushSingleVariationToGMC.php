@@ -16,15 +16,17 @@ class PushSingleVariationToGMC implements ShouldQueue
 
     private $shop;
     private $gmcData;
+	private $map;
     /**
      * Create a new job instance.
      *
      * @return void
      */
-    public function __construct($shop, $gmcData)
+    public function __construct($shop, $gmcData, $map)
     {
         $this->shop = $shop;
         $this->gmcData = $gmcData;
+		$this->map = $map;
     }
 
     /**
@@ -39,13 +41,16 @@ class PushSingleVariationToGMC implements ShouldQueue
             'merchant_id' => $this->shop->gmc_id,
             'client_credentials_path' => storage_path('app/'.$this->shop->gmc_credential)
         ])->insert($this->gmcData)->then(function($response){
-            echo 'Product inserted';
+			$this->map->synced = true;
+			$this->map->save();
+            //echo 'Product inserted';
         })->otherwise(function($response){
-            echo 'Insert failed';
+            //echo 'Insert failed';
         })->catch(function($e){
             echo($e->getResponse()->getBody()->getContents());
         });
-        echo "\n";
+        //echo "\n";
+	
         return;
     }
 }
