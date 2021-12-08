@@ -16,9 +16,9 @@ use Illuminate\Queue\SerializesModels;
 class MapProductToProject implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
-	
+
 	public $timeout = 0;
-	
+
     private $projectId;
 
     /**
@@ -49,7 +49,7 @@ class MapProductToProject implements ShouldQueue
             $catIds[] = $category['_id'];
         }
         $productIds = ProductMapCategory::whereIn('category_id', $catIds)->pluck('product_id')->toArray();
-		
+
 		//print_r($productIds);
         $rawProductsQuery = RawProduct::query();
         //$rawProductsQuery->select('shop_id', 'system_product_id');
@@ -92,7 +92,7 @@ class MapProductToProject implements ShouldQueue
                 }
             }
         });
-		
-        PushToGMC::dispatch($project->id)->onQueue('gmc');
+
+        //PushToGMC::dispatch($project->id)->onQueue('gmc');
     }
 }

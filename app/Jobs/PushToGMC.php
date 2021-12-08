@@ -24,16 +24,13 @@ class PushToGMC implements ShouldQueue
 
 	public $timeout = 0;
 
-    private $projectId;
-
     /**
      * Create a new job instance.
      *
      * @return void
      */
-    public function __construct($projectId)
+    public function __construct()
     {
-        $this->projectId = $projectId;
     }
 
     /**
@@ -43,34 +40,52 @@ class PushToGMC implements ShouldQueue
      */
     public function handle()
     {
-        $project = Project::find($this->projectId);
-        if (!$project) {
-			echo 'Ko thay project' . "\n";
-            return Command::SUCCESS;
-        }
+        $maps = ProductMapProjects::where('synced', false)->limit(5000)->get();
 
-        $shop = Shop::find($project->shop_id);
-        if (!$shop) {
-			echo 'Ko thay shop' . "\n";
-            return Command::SUCCESS;
-        }
-
-        // Fill default value for product
-        $defaultValues = array();
-        foreach ($project->default_values as $default_value) {
-            $keyName = $default_value['name'];
-            $keyValue = $default_value['value'];
-            if (empty($rawProduct->{$keyName})) {
-                $defaultValues[$keyName] = $keyValue;
-            }
-        }
-
-        $maps = ProductMapProjects::where('project_id', $project->id)->where('synced', false)->limit(5000)->get();
-		echo count($maps);
-		
 		//ProductMapProjects::where('project_id', $project->id)->where('synced', false)->chunk(100, function ($maps) use ($project, $shop, $defaultValues);
 		{
             foreach ($maps as $map) {
+
+                $project = Project::where('_id', $map->project_id)->first();
+                if (!$project) {
+                    continue;
+                }
+
+                if (!$project->todaySync) {
+                    $project->todaySync = str_pad(date("d", time()), 2, '0') . '_' . str_pad(0, 5, '0');
+                } else {
+                    $parts = explode('_', $project->todaySync);
+                    $date = $parts[0];
+                    if ($date == str_pad(date("d", time()), 2, '0')) {
+                        $cou = $parts[1];
+                        if ($cou > 15000) {
+                            continue;
+                        } else {
+                            $cou++;
+                        }
+                    } else {
+                        $date = str_pad(date("d", time()), 2, '0');
+                        $cou = 1;
+                    }
+                    $project->todaySync = $date .'_'.$cou;
+                }
+                $project->save();
+
+                $shop = Shop::find($project->shop_id);
+                if (!$shop) {
+                    continue;
+                }
+                // Fill default value for product
+                $defaultValues = array();
+                foreach ($project->default_values as $default_value) {
+                    $keyName = $default_value['name'];
+                    $keyValue = $default_value['value'];
+                    if (empty($rawProduct->{$keyName})) {
+                        $defaultValues[$keyName] = $keyValue;
+                    }
+                }
+
+
                 $rawProduct = RawProduct::where('system_product_id', $map->product_id)->with('productMapCategories', 'productMapCategories.category')->first();
                 if (!$rawProduct) {
 					echo 'Ko thay raww' . "\n";
@@ -81,11 +96,11 @@ class PushToGMC implements ShouldQueue
                     print_r($rawProduct->id);
                     continue;
                 }
-				
+
 				if (!$rawProduct->image['src']) {
 					continue;
 				}
-				
+
                 // Các field có thể ghi đè
                 //Adult, Gender, shipping_price, ageGroup, color
                 $shippingPrice = 5.05;
@@ -201,7 +216,7 @@ $variationCount = 0;
                             continue;
                         }
                     }
-					
+
 					// Tìm xem SP này có thuộc collection là hoodie ko
                     $isHoodieCollection = false;
                     foreach($rawProduct->productMapCategories AS $productCategory) {
