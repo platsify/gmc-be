@@ -94,6 +94,11 @@ class ProjectController extends Controller
             return response()->json(['status' => 'success', 'data' => $result, 'message' => "Thêm thành công"]);
         }
     }
+	
+	public function mapNewProduct(Request $request) {
+		MapProductToProject::dispatch($request->project_id)->onQueue('gmc');
+		return response()->json(['status' => 'success', 'data' => [], 'message' => "Yêu cầu thành công"]);
+	}
 
     /**
      * Display the specified resource.

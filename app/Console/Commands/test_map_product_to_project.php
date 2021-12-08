@@ -67,7 +67,13 @@ class test_map_product_to_project extends Command
 		foreach ($project->categories as $cat) {
 			$catIds[] = $cat['_id'];
 		}
-        $productIds = ProductMapCategory::whereIn('category_id', $catIds)->pluck('product_id')->toArray();
+		
+		$lastMap = 0;
+		if ($project->lastMap) {
+			$lastMap = $project->lastMap;
+		}
+		
+        $productIds = ProductMapCategory::whereIn('category_id', $catIds)->where('original_last_update', '>', $lastMap)->pluck('product_id')->toArray();
 		
         $rawProductsQuery = RawProduct::query();
         //$rawProductsQuery->select('shop_id', 'system_product_id');
@@ -81,7 +87,7 @@ class test_map_product_to_project extends Command
         //}
 
         $rawProductsQuery->chunk(1000,  function($rawProducts) use($projectId) {
-            echo count($rawProducts);
+            //echo count($rawProducts);
             foreach ($rawProducts as $rawProduct) {
                 $mapped = ProductMapProjects::where('product_id', $rawProduct->system_product_id)->where('project_id', $projectId)->first();
                 if (!$mapped) {
@@ -93,6 +99,9 @@ class test_map_product_to_project extends Command
                 }
             }
         });
+		
+		$project->lastMap = time();
+		$project->save();
 
         PushToGMC::dispatch($project->id);
     }

@@ -49,6 +49,8 @@ class MapProductToProject implements ShouldQueue
             $catIds[] = $category['_id'];
         }
         $productIds = ProductMapCategory::whereIn('category_id', $catIds)->pluck('product_id')->toArray();
+		
+		//print_r($productIds);
         $rawProductsQuery = RawProduct::query();
         //$rawProductsQuery->select('shop_id', 'system_product_id');
         $rawProductsQuery->where('shop_id', $project->shop_id);
@@ -90,8 +92,7 @@ class MapProductToProject implements ShouldQueue
                 }
             }
         });
-
-        echo 'Tao job push GMC';
+		
         PushToGMC::dispatch($project->id)->onQueue('gmc');
     }
 }

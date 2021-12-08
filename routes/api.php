@@ -30,6 +30,8 @@ Route::post('delete-many-product', [ProductController::class, 'deleteManyProduct
 Route::resource('product', ProductController::class);
 
 Route::apiResource('shop', ShopController::class);
+
+Route::get('re-map-product-project', [ProjectController::class, 'mapNewProduct']);
 Route::apiResource('project', ProjectController::class);
 
 // Category

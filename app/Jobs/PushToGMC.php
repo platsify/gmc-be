@@ -201,6 +201,20 @@ $variationCount = 0;
                             continue;
                         }
                     }
+					
+					// Tìm xem SP này có thuộc collection là hoodie ko
+                    $isHoodieCollection = false;
+                    foreach($rawProduct->productMapCategories AS $productCategory) {
+                        if ($productCategory->category && strpos(mb_strtolower($productCategory->category->name), 'hoodie') !== false) {
+                            $isHoodieCollection = true;
+                            break;
+                        }
+                    }
+                    if ($isHoodieCollection) {
+                        if ($type != 'AOP Hoodie') {
+                            continue;
+                        }
+                    }
 
                     // Loại bỏ các sản phẩm có Size nhưng ko phải S và Throw
 					//echo $rawProduct->options[$sizeOption-1]['name'] . ' = ' .$size."\n";

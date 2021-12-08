@@ -36,6 +36,7 @@ class PushSingleVariationToGMC implements ShouldQueue
      */
     public function handle()
     {
+		//echo storage_path('app/'.$this->shop->gmc_credential)."\n\n";
         ProductApi::merchant([
             'app_name' => $this->shop->name,
             'merchant_id' => $this->shop->gmc_id,

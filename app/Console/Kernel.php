@@ -25,7 +25,11 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-		$schedule->command('test_map 619f3ea5ff798b78771ed965')->everyThirtyMinutes();
+		//$schedule->command('test_map 61a0f8365e425d044542cbb2')->everyFiveMinutes();
+		//$schedule->command('test_map 61a0f61c06a98a7057665fe5')->everyFiveMinutes();
+		//$schedule->command('test_map 61a0f64d60aa7173c30abb14')->everyFiveMinutes();
+		//$schedule->command('test_map 61a0f67c06a98a7057665fe6')->everyFiveMinutes();
+		
         // $schedule->command('inspire')->hourly();
     }
 
