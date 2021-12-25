@@ -52,7 +52,7 @@ class PushToGMC implements ShouldQueue
         shuffle($activeProjects);
         $projectId = $activeProjects[0];
         echo 'Push project '.$projectId."\n";
-        $maps = ProductMapProjects::where('project_id', $projectId)->where('synced', false)->limit(4000)->get();
+        $maps = ProductMapProjects::where('project_id', $projectId)->where('synced', false)->limit(3000)->get();
         if (!$maps) {
             //echo 'Het map roi' . "\n";
             return;
