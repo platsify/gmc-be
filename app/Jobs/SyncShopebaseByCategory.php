@@ -3,6 +3,8 @@
 namespace App\Jobs;
 
 use App\Models\Product;
+use App\Models\ProductMapCategory;
+use App\Models\Category;
 use App\Repositories\Category\CategoryRepositoryInterface;
 use App\Repositories\Product\ProductRepositoryInterface;
 use App\Repositories\ProductMapCategory\ProductMapCategoryRepositoryInterface;
@@ -48,32 +50,25 @@ class SyncShopebaseByCategory implements ShouldQueue
         // TỪ lần sau, chỉ update lại, nên sẽ order by updated_at
 
         $sinceId = 0;
-		if ($this->shopId == '619de0cafb2006073f1182b4') {
-			$sinceId = '1000000283437106';
+		$lastProductInCategory = ProductMapCategory::where('category_id', $this->category->id)->orderBy('_id', 'DESC')->first();
+		if ($lastProductInCategory) {
+			$lastProduct = Product::where('_id', $lastProductInCategory->product_id)->first();
+			if ($lastProduct) {
+				$sinceId = explode('__', $lastProduct->original_id)[1];
+			}
 		}
-		if ($this->shopId == '619de2e0efcd2331f96cc664') {
-			$sinceId = '1000000206103931';
-		}
-		if ($this->shopId == '619fc194fdaadf32c877ea52') {
-			$sinceId = '1000000296801496'; 
-		}
-		if ($this->shopId == '619fc1bdfdaadf32c877ea53') {
-			$sinceId = '1000000293411155'; 
-		}
-		if ($this->shopId == '619de2e0efcd2331f96cc664') {
-			$sinceId = '1000000206103931'; 
-		}
+		
         $lastUpdatedAt = $this->lastSync;
         $page = 0;
 
         do {
             $page++;
             $originalCategoryId = str_replace($this->shopId . '__', '', $this->category->original_id);
-            if ($this->lastSync == 0) {
-                $queryOptions = ['collection_id' => $originalCategoryId, 'limit' => 250, 'sort_field' => 'id', 'sort_mode' => 'asc', 'since_id' => $sinceId];
-            } else {
-                $queryOptions = ['collection_id' => $originalCategoryId, 'page' => $page, 'limit' => 250, 'updated_at_min' => Carbon::createFromTimestamp($lastUpdatedAt)->toISOString()];
-            }
+            //if ($this->lastSync == 0) {
+            $queryOptions = ['collection_id' => $originalCategoryId, 'limit' => 250, 'sort_field' => 'id', 'sort_mode' => 'asc', 'since_id' => $sinceId];
+            //} else {
+            //    $queryOptions = ['collection_id' => $originalCategoryId, 'page' => $page, 'limit' => 250, 'updated_at_min' => Carbon::createFromTimestamp($lastUpdatedAt)->toISOString()];
+            //}
             $sbProducts = $this->shopbase->getProducts($queryOptions);
             if (!$sbProducts || empty($sbProducts) || empty($sbProducts->products)) {
                 if (isset($sbProducts->error)) {

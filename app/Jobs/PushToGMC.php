@@ -22,7 +22,7 @@ class PushToGMC implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-	public $timeout = 0;
+    public $timeout = 0;
 
     /**
      * Create a new job instance.
@@ -40,209 +40,205 @@ class PushToGMC implements ShouldQueue
      */
     public function handle()
     {
-        $maps = ProductMapProjects::where('synced', false)->limit(5000)->get();
+        $activeProjects = Project::where('active', true)->get()->pluck('_id')->toArray();
+        if (!$activeProjects || count($activeProjects) == 0) {
+            return;
+        }
 
-		//ProductMapProjects::where('project_id', $project->id)->where('synced', false)->chunk(100, function ($maps) use ($project, $shop, $defaultValues);
-		{
-            foreach ($maps as $map) {
+        shuffle($activeProjects);
+        $projectId = $activeProjects[0];
+        $maps = ProductMapProjects::where('project_id', $projectId)->where('synced', false)->limit(8000)->get();
+        if (!$maps) {
+            //echo 'Het map roi' . "\n";
+            return;
+        }
+        //echo count($maps);
 
-                $project = Project::where('_id', $map->project_id)->first();
-                if (!$project) {
-                    continue;
-                }
+        //ProductMapProjects::where('project_id', $project->id)->where('synced', false)->chunk(100, function ($maps) use ($project, $shop, $defaultValues);
+        {
+        foreach ($maps as $map) {
+            $project = Project::where('_id', $map->project_id)->first();
+            if (!$project) {
+                // echo 'Project ko con ton tai, da xoa' . "\n";
+                $map->delete();
+                continue;
+            }
 
-                if (!$project->todaySync) {
-                    $project->todaySync = str_pad(date("d", time()), 2, '0') . '_' . str_pad(0, 5, '0');
-                } else {
-                    $parts = explode('_', $project->todaySync);
-                    $date = $parts[0];
-                    if ($date == str_pad(date("d", time()), 2, '0')) {
-                        $cou = $parts[1];
-                        if ($cou > 15000) {
-                            continue;
-                        } else {
-                            $cou++;
-                        }
-                    } else {
-                        $date = str_pad(date("d", time()), 2, '0');
-                        $cou = 1;
-                    }
-                    $project->todaySync = $date .'_'.$cou;
+            $shop = Shop::find($project->shop_id);
+            if (!$shop) {
+                // echo 'Shop ko con ton tai, da xoa' . "\n";
+                $map->delete();
+                continue;
+            }
+            // Fill default value for product
+            $defaultValues = array();
+            foreach ($project->default_values as $default_value) {
+                $keyName = $default_value['name'];
+                $keyValue = $default_value['value'];
+                if (empty($rawProduct->{$keyName})) {
+                    $defaultValues[$keyName] = $keyValue;
                 }
-                $project->save();
-
-                $shop = Shop::find($project->shop_id);
-                if (!$shop) {
-                    continue;
-                }
-                // Fill default value for product
-                $defaultValues = array();
-                foreach ($project->default_values as $default_value) {
-                    $keyName = $default_value['name'];
-                    $keyValue = $default_value['value'];
-                    if (empty($rawProduct->{$keyName})) {
-                        $defaultValues[$keyName] = $keyValue;
-                    }
-                }
+            }
 
 
-                $rawProduct = RawProduct::where('system_product_id', $map->product_id)->with('productMapCategories', 'productMapCategories.category')->first();
-                if (!$rawProduct) {
-					echo 'Ko thay raww' . "\n";
-                    return Command::SUCCESS;
-                }
+            $rawProduct = RawProduct::where('system_product_id', $map->product_id)->with('productMapCategories', 'productMapCategories.category')->first();
+            if (!$rawProduct) {
+                // echo 'Ko thay raww' . "\n";
+                return Command::SUCCESS;
+            }
 
-                if (!$rawProduct->variants) {
-                    print_r($rawProduct->id);
-                    continue;
-                }
+            if (!$rawProduct->variants) {
+                print_r($rawProduct->id);
+                continue;
+            }
 
-				if (!$rawProduct->image['src']) {
-					continue;
-				}
+            if (!$rawProduct->image['src']) {
+                continue;
+            }
 
-                // Các field có thể ghi đè
-                //Adult, Gender, shipping_price, ageGroup, color
-                $shippingPrice = 5.05;
-                $adult = false;
-                $gender = 'unisex';
-                $ageGroup = 'adult';
-                $color = 'multicolor';
-                $size = 'Free size';
-                $type = '';
-                $count = 1;
-                $category = '';
-                $multipack = 1;
-                $material = 1;
-                $isBundle = true;
-                $pattern = 'flower';
-                $sizeType = 'regular';
-                $sizeSystem = 'US';
-                $identifierExists = false;
-                $shipFromCountry = 'US';
 
-                if (!empty($defaultValues['adults'])) {
-                    $adult = (boolean)$defaultValues['adults'];
-                }
-                if (!empty($defaultValues['gender'])) {
-                    $gender = $defaultValues['gender'];
-                }
-                if (!empty($defaultValues['shipping_price'])) {
-                    $shippingPrice = $defaultValues['shipping_price'];
-                }
-                if (!empty($defaultValues['ageGroup'])) {
-                    $ageGroup = $defaultValues['ageGroup'];
-                }
-                if (!empty($defaultValues['count'])) {
-                    $count = $defaultValues['count'];
-                }
-                if (!empty($defaultValues['category'])) {
-                    $category = $defaultValues['category'];
-                }
-                if (!empty($defaultValues['multipack'])) {
-                    $multipack = $defaultValues['multipack'];
-                }
-                if (!empty($defaultValues['material'])) {
-                    $material = $defaultValues['material'];
-                }
-                if (!empty($defaultValues['isBundle'])) {
-                    $isBundle = $defaultValues['isBundle'];
-                }
-                if (!empty($defaultValues['pattern'])) {
-                    $pattern = $defaultValues['pattern'];
-                }
-                if (!empty($defaultValues['sizeType'])) {
-                    $sizeType = $defaultValues['sizeType'];
-                }
-                if (!empty($defaultValues['sizeSystem'])) {
-                    $sizeSystem = $defaultValues['sizeSystem'];
-                }
-                if (!empty($defaultValues['identifierExists'])) {
-                    $identifierExists = $defaultValues['identifierExists'];
-                }
-                if (!empty($defaultValues['shipFromCountry'])) {
-                    $shipFromCountry = $defaultValues['shipFromCountry'];
-                }
+            // Các field có thể ghi đè
+            //Adult, Gender, shipping_price, ageGroup, color
+            $shippingPrice = 5.05;
+            $adult = false;
+            $gender = 'unisex';
+            $ageGroup = 'adult';
+            $color = 'multicolor';
+            $size = 'Free size';
+            $type = '';
+            $count = 1;
+            $category = '';
+            $multipack = 1;
+            $material = 1;
+            $isBundle = true;
+            $pattern = 'flower';
+            $sizeType = 'regular';
+            $sizeSystem = 'US';
+            $identifierExists = false;
+            $shipFromCountry = 'US';
 
-                // Nếu ko có category thì ko đẩy
-                if (empty($category)) {
-                    continue;
+            if (!empty($defaultValues['adults'])) {
+                $adult = (boolean)$defaultValues['adults'];
+            }
+            if (!empty($defaultValues['gender'])) {
+                $gender = $defaultValues['gender'];
+            }
+            if (!empty($defaultValues['shipping_price'])) {
+                $shippingPrice = $defaultValues['shipping_price'];
+            }
+            if (!empty($defaultValues['ageGroup'])) {
+                $ageGroup = $defaultValues['ageGroup'];
+            }
+            if (!empty($defaultValues['count'])) {
+                $count = $defaultValues['count'];
+            }
+            if (!empty($defaultValues['category'])) {
+                $category = $defaultValues['category'];
+            }
+            if (!empty($defaultValues['multipack'])) {
+                $multipack = $defaultValues['multipack'];
+            }
+            if (!empty($defaultValues['material'])) {
+                $material = $defaultValues['material'];
+            }
+            if (!empty($defaultValues['isBundle'])) {
+                $isBundle = $defaultValues['isBundle'];
+            }
+            if (!empty($defaultValues['pattern'])) {
+                $pattern = $defaultValues['pattern'];
+            }
+            if (!empty($defaultValues['sizeType'])) {
+                $sizeType = $defaultValues['sizeType'];
+            }
+            if (!empty($defaultValues['sizeSystem'])) {
+                $sizeSystem = $defaultValues['sizeSystem'];
+            }
+            if (!empty($defaultValues['identifierExists'])) {
+                $identifierExists = $defaultValues['identifierExists'];
+            }
+            if (!empty($defaultValues['shipFromCountry'])) {
+                $shipFromCountry = $defaultValues['shipFromCountry'];
+            }
+
+            // Nếu ko có category thì ko đẩy
+            if (empty($category)) {
+                continue;
+            }
+            // Tìm số thự tự của color và size trong options
+            $colorOption = 99999;
+            $sizeOption = 99999;
+            $typeOption = 9999;
+            foreach ($rawProduct->options as $item) {
+                $item = (object)$item;
+                if ($item->name == 'Size') {
+                    $sizeOption = $item->position;
                 }
-                // Tìm số thự tự của color và size trong options
-                $colorOption = 99999;
-                $sizeOption = 99999;
-                $typeOption = 9999;
-                foreach ($rawProduct->options as $item) {
-                    $item = (object) $item;
-                    if ($item->name == 'Size') {
-                        $sizeOption = $item->position;
-                    }
-                    if ($item->name == 'Color') {
-                        $colorOption = $item->position;
-                    }
-                    if ($item->name == 'Type') {
-                        $typeOption = $item->position;
-                    }
+                if ($item->name == 'Color') {
+                    $colorOption = $item->position;
                 }
+                if ($item->name == 'Type') {
+                    $typeOption = $item->position;
+                }
+            }
 
 //echo $rawProduct->_id."\n";
-$variationCount = 0;
-                foreach ($rawProduct->variants as $variant) {
-					//echo $variationCount."\n";
-					$variationCount ++;
-                    $variant = (object) $variant;
+            $variationCount = 0;
+            foreach ($rawProduct->variants as $variant) {
+                //echo $variationCount."\n";
+                $variationCount++;
+                $variant = (object)$variant;
 
-                    // Thay thế default value
-                    if (!empty($variant->{'option'.$sizeOption})) {
-                        $size = $variant->{'option'.$sizeOption};
-                    }
-                    if (!empty($variant->{'option'.$colorOption})) {
-                        $color = $variant->{'option'.$colorOption};
-                    }
-                    if (!empty($variant->{'option'.$typeOption})) {
-                        $type = $variant->{'option'.$typeOption};
-                    }
+                // Thay thế default value
+                if (!empty($variant->{'option' . $sizeOption})) {
+                    $size = $variant->{'option' . $sizeOption};
+                }
+                if (!empty($variant->{'option' . $colorOption})) {
+                    $color = $variant->{'option' . $colorOption};
+                }
+                if (!empty($variant->{'option' . $typeOption})) {
+                    $type = $variant->{'option' . $typeOption};
+                }
 
-                    // Tìm xem SP này có thuộc collection là bedding ko
-                    $isBeddingCollection = false;
-                    foreach($rawProduct->productMapCategories AS $productCategory) {
-                        if ($productCategory->category && strpos(mb_strtolower($productCategory->category->name), 'bedding') !== false) {
-                            $isBeddingCollection = true;
-                            break;
-                        }
+                // Tìm xem SP này có thuộc collection là bedding ko
+                $isBeddingCollection = false;
+                foreach ($rawProduct->productMapCategories as $productCategory) {
+                    if ($productCategory->category && strpos(mb_strtolower($productCategory->category->name), 'bedding') !== false) {
+                        $isBeddingCollection = true;
+                        break;
                     }
-                    if ($isBeddingCollection) {
-                        if ($type != 'Quilt Cover + 2 Pillow Cases') {
-                            continue;
-                        }
-                    }
-
-					// Tìm xem SP này có thuộc collection là hoodie ko
-                    $isHoodieCollection = false;
-                    foreach($rawProduct->productMapCategories AS $productCategory) {
-                        if ($productCategory->category && strpos(mb_strtolower($productCategory->category->name), 'hoodie') !== false) {
-                            $isHoodieCollection = true;
-                            break;
-                        }
-                    }
-                    if ($isHoodieCollection) {
-                        if ($type != 'AOP Hoodie') {
-                            continue;
-                        }
-                    }
-
-                    // Loại bỏ các sản phẩm có Size nhưng ko phải S và Throw
-					//echo $rawProduct->options[$sizeOption-1]['name'] . ' = ' .$size."\n";
-                    if ($rawProduct->options[$sizeOption-1]['name'] == 'Size' && !in_array($size, ['S','Throw', 'Tween', 'Twin'])) {
-						//echo 'Bỏ qua'. "\n";
+                }
+                if ($isBeddingCollection) {
+                    if ($type != 'Quilt Cover + 2 Pillow Cases') {
                         continue;
                     }
+                }
 
-                    //  Điều kiện lọc
-                    if ($project->require_gtin && empty($variant->barcode)) {
-                        // echo 'Bỏ qua vì yêu cầu gtin mà variation này ko có';
+                // Tìm xem SP này có thuộc collection là hoodie ko
+                $isHoodieCollection = false;
+                foreach ($rawProduct->productMapCategories as $productCategory) {
+                    if ($productCategory->category && strpos(mb_strtolower($productCategory->category->name), 'hoodie') !== false) {
+                        $isHoodieCollection = true;
+                        break;
+                    }
+                }
+                if ($isHoodieCollection) {
+                    if ($type != 'AOP Hoodie') {
                         continue;
                     }
+                }
+
+                // Loại bỏ các sản phẩm có Size nhưng ko phải S và Throw
+                //echo $rawProduct->options[$sizeOption-1]['name'] . ' = ' .$size."\n";
+                if (isset($rawProduct->options[$sizeOption - 1]) && isset($rawProduct->options[$sizeOption - 1]) && $rawProduct->options[$sizeOption - 1]['name'] == 'Size' && !in_array($size, ['S', 'Throw', 'Tween', 'Twin'])) {
+                    //echo 'Bỏ qua'. "\n";
+                    continue;
+                }
+
+                //  Điều kiện lọc
+                if ($project->require_gtin && empty($variant->barcode)) {
+                    // echo 'Bỏ qua vì yêu cầu gtin mà variation này ko có';
+                    continue;
+                }
 
 //                    if (!empty($project->only_option1) && (!isset($variant->option1) || $variant->option1 != $project->only_option1)) {
 //                        //echo 'Option 1 not match';
@@ -257,51 +253,53 @@ $variationCount = 0;
 //                    }
 
 
-                    // Map vào GMC
-                    $gmcData = new Product();
-                    $gmcData->ageGroup($ageGroup);
-                    $gmcData->color($color);
-                    $gmcData->sizes($size);
-                    $gmcData->sizeType($sizeType);
-                    $gmcData->sizeSystem($sizeSystem);
-                    $gmcData->multipack($multipack);
-                    $gmcData->category($category);
-                    $gmcData->material($material);
-                    $gmcData->pattern($pattern);
-                    $gmcData->isBundle($isBundle);
-                    $gmcData->identifierExists($identifierExists);
-                    $gmcData->gender($gender);
-                    $gmcData->adult($adult);
-                    $gmcData->title(mb_substr($rawProduct->title . ' - ' . $variant->title, 0, 150));
-                    $gmcData->description($rawProduct->body_html);
-                    //$gmcData->id($gmcData->channel . ':'.$gmcData->contentLanguage.':'.$gmcData->targetCountry.':'.$gmcData->offerId);
-                    $gmcData->link(rtrim( $shop->public_url, '/').'/'.$rawProduct->handle);
-                    $gmcData->image($rawProduct->image['src']);
-                    $gmcData->lang('en');
-                    $gmcData->online('online');
-                    $gmcData->inStock(true);
-                    $gmcData->price($variant->price, 'USD');
-					$gmcData->country($shipFromCountry);
-                    $shipping = new ProductShipping();
-                    $shipping->price($shippingPrice, 'USD');
-                    $shipping->country($shipFromCountry);
-                    $gmcData->shipping($shipping);
-                    $gmcData->offerId($variant->id);
-                    $gmcData->taxes(['country'=> 'us', 'rate' => 6, 'taxShip' => true]);
-                    if (!empty($variant->barcode)) {
-                        $gmcData->gtin($variant->barcode);
-                    }
-                    $gmcData->condition('new');
-                    $gmcData->brand($shop->name);
-                    $gmcData->itemGroupId($variant->id);
-					//$gmcData->customValues(['ships_from_country' => $shipFromCountry]);
+                // Map vào GMC
+                $gmcData = new Product();
+                $gmcData->ageGroup($ageGroup);
+                $gmcData->color($color);
+                $gmcData->sizes($size);
+                $gmcData->sizeType($sizeType);
+                $gmcData->sizeSystem($sizeSystem);
+                $gmcData->multipack($multipack);
+                $gmcData->category($category);
+                $gmcData->material($material);
+                $gmcData->pattern($pattern);
+                $gmcData->isBundle($isBundle);
+                $gmcData->identifierExists($identifierExists);
+                $gmcData->gender($gender);
+                $gmcData->adult($adult);
+                $gmcData->title(mb_substr($rawProduct->title . ' - ' . $variant->title, 0, 150));
+                $gmcData->description($rawProduct->body_html);
+                //$gmcData->id($gmcData->channel . ':'.$gmcData->contentLanguage.':'.$gmcData->targetCountry.':'.$gmcData->offerId);
+                $gmcData->link(rtrim($shop->public_url, '/') . '/products/' . $rawProduct->handle . '?variant=' . $variant->id);
+                $gmcData->link = str_replace('/products/products/', '/products/', $gmcData->link);
 
-                    $countCustomLabel = 0;
-                    foreach($rawProduct->productMapCategories AS $productCategory) {
-                        if ($productCategory->category) {
-                            if ($countCustomLabel == 0) {
-                                $gmcData->customLabel0($productCategory->category->name);
-                            }
+                $gmcData->image($rawProduct->image['src']);
+                $gmcData->lang('en');
+                $gmcData->online('online');
+                $gmcData->inStock(true);
+                $gmcData->price($variant->price, 'USD');
+                $gmcData->country($shipFromCountry);
+                $shipping = new ProductShipping();
+                $shipping->price($shippingPrice, 'USD');
+                $shipping->country($shipFromCountry);
+                $gmcData->shipping($shipping);
+                $gmcData->offerId($variant->id);
+                $gmcData->taxes(['country' => 'us', 'rate' => 6, 'taxShip' => true]);
+                if (!empty($variant->barcode)) {
+                    $gmcData->gtin($variant->barcode);
+                }
+                $gmcData->condition('new');
+                $gmcData->brand($shop->name);
+                $gmcData->itemGroupId($variant->id);
+                //$gmcData->customValues(['ships_from_country' => $shipFromCountry]);
+
+                $countCustomLabel = 0;
+                foreach ($rawProduct->productMapCategories as $productCategory) {
+                    if ($productCategory->category) {
+                        if ($countCustomLabel == 0) {
+                            $gmcData->customLabel0($productCategory->category->name);
+                        }
 //                            if ($countCustomLabel == 1) {
 //                                $gmcData->customLabel1($productCategory->category->name);
 //                            }
@@ -314,16 +312,41 @@ $variationCount = 0;
 //                            if ($countCustomLabel == 4) {
 //                                $gmcData->customLabel4($productCategory->category->name);
 //                            }
-                            $countCustomLabel++;
-                            if ($countCustomLabel == 4) {
-                                break;
-                            }
+                        $countCustomLabel++;
+                        if ($countCustomLabel == 4) {
+                            break;
                         }
                     }
-
-                    PushSingleVariationToGMC::dispatch($shop, $gmcData, $map)->onQueue('gmc');
                 }
+
+                if (!$project->todaySync) {
+                    $project->todaySync = str_pad(date("d", time()), 2, '0', STR_PAD_LEFT) . '_' . str_pad(0, 5, '0', STR_PAD_LEFT);
+                } else {
+                    $parts = explode('_', $project->todaySync);
+                    $date = $parts[0];
+                    if ($date == str_pad(date("d", time()), 2, '0', STR_PAD_LEFT)) {
+                        $cou = $parts[1];
+                        $maxCou = 15000;
+                        if ($project->maxPerDay) {
+                            $maxCou = $project->maxPerDay;
+                        }
+                        if ($cou > $maxCou) {
+                            //echo 'Da het han muc ngay ' . $cou . "\n";
+                            return;
+                        } else {
+                            $cou++;
+                        }
+                    } else {
+                        $date = str_pad(date("d", time()), 2, '0', STR_PAD_LEFT);
+                        $cou = 1;
+                    }
+                    $project->todaySync = str_pad($date, 2, '0', STR_PAD_LEFT) . '_' . str_pad($cou, 5, '0', STR_PAD_LEFT);
+                }
+                $project->save();
+                PushSingleVariationToGMC::dispatch($shop, $gmcData, $map)->onQueue('gmc');
+                //echo $cou . "\n";
             }
+        }
         };
         return Command::SUCCESS;
     }
