@@ -7,6 +7,8 @@ use App\Models\ProductMapProjects;
 use App\Models\Project;
 use App\Models\RawProduct;
 use App\Models\Shop;
+use App\Models\VariantBlacklist;
+use App\Models\VariantWhitelist;
 use Illuminate\Bus\Queueable;
 use Illuminate\Console\Command;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
@@ -40,14 +42,18 @@ class PushToGMC implements ShouldQueue
      */
     public function handle()
     {
-        $activeProjects = Project::where('active', true)->get()->pluck('_id')->toArray();
+        // Comment tạm 2512
+        $activeProjects = ['619f3f968e5de9606219e65c', '619f3ea5ff798b78771ed965'];
+        //$activeProjects = Project::where('active', true)->get()->pluck('_id')->toArray();
         if (!$activeProjects || count($activeProjects) == 0) {
             return;
         }
 
         shuffle($activeProjects);
         $projectId = $activeProjects[0];
-        $maps = ProductMapProjects::where('project_id', $projectId)->where('synced', false)->limit(8000)->get();
+        // Comment tạm 2512
+        //$maps = ProductMapProjects::where('project_id', $projectId)->where('synced', false)->limit(8000)->get();
+        $maps = ProductMapProjects::where('project_id', $projectId)->limit(8000)->get();
         if (!$maps) {
             //echo 'Het map roi' . "\n";
             return;
@@ -251,6 +257,23 @@ class PushToGMC implements ShouldQueue
 //                    if (!empty($project->only_option3) && (!isset($variant->option3) || $variant->option3 != $project->only_option3)) {
 //                        continue;
 //                    }
+
+
+                // Comment tạm 2512
+                // Bỏ qua những variant nằm trong blacklist
+                // Do trước kia chưa lưu blacklist và đã điều tra được ID của 2 project nên những ID ko có trong danh sách
+                // cũng sẽ cho vào blacklist`
+                if ($projectId == '619f3ea5ff798b78771ed965' || $projectId == '619f3f968e5de9606219e65c') {
+                    $inWhiteList = VariantWhitelist::where('variant_id', $variant->id)->first();
+                    if (!$inWhiteList) {
+                        $newVariantBlacklist = new VariantBlacklist();
+                        $newVariantBlacklist->variant_id = $variant->id;
+                        $newVariantBlacklist->product_id = $rawProduct->id;
+                        $newVariantBlacklist->save();
+                        continue;
+                    }
+                }
+                // HẾT Comment tạm 2512
 
 
                 // Map vào GMC
