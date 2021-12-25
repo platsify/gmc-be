@@ -64,14 +64,14 @@ class PushToGMC implements ShouldQueue
         foreach ($maps as $map) {
             $project = Project::where('_id', $map->project_id)->first();
             if (!$project) {
-                // echo 'Project ko con ton tai, da xoa' . "\n";
+                echo 'Project ko con ton tai, da xoa' . "\n";
                 $map->delete();
                 continue;
             }
 
             $shop = Shop::find($project->shop_id);
             if (!$shop) {
-                // echo 'Shop ko con ton tai, da xoa' . "\n";
+                echo 'Shop ko con ton tai, da xoa' . "\n";
                 $map->delete();
                 continue;
             }
@@ -88,7 +88,7 @@ class PushToGMC implements ShouldQueue
 
             $rawProduct = RawProduct::where('system_product_id', $map->product_id)->with('productMapCategories', 'productMapCategories.category')->first();
             if (!$rawProduct) {
-                // echo 'Ko thay raww' . "\n";
+                echo 'Ko thay raww' . "\n";
                 return Command::SUCCESS;
             }
 
@@ -98,6 +98,7 @@ class PushToGMC implements ShouldQueue
             }
 
             if (!$rawProduct->image['src']) {
+                echo $rawProduct->id. " Khong co anh\n";
                 continue;
             }
 
@@ -167,6 +168,7 @@ class PushToGMC implements ShouldQueue
 
             // Nếu ko có category thì ko đẩy
             if (empty($category)) {
+                echo "Khong co category \n" .$rawProduct->id;
                 continue;
             }
             // Tìm số thự tự của color và size trong options
@@ -192,6 +194,7 @@ class PushToGMC implements ShouldQueue
 
                 $inBlackList = VariantBlacklist::where('variant_id', $variant->id)->first();
                 if ($inBlackList) {
+                    echo $variant->id. " nam trong blacklist\n";
                     continue;
                 }
 
@@ -369,6 +372,7 @@ class PushToGMC implements ShouldQueue
                 }
                 $project->save();
                 PushSingleVariationToGMC::dispatch($shop, $gmcData, $map)->onQueue('gmc');
+                echo 'Add job PushSingleVariationToGMC cho id'.$variant->id."\n";
                 //echo $cou . "\n";
             }
         }
