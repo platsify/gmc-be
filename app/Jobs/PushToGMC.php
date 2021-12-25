@@ -188,16 +188,13 @@ class PushToGMC implements ShouldQueue
             }
 
 //echo $rawProduct->_id."\n";
-            $variationCount = 0;
             foreach ($rawProduct->variants as $variant) {
+                $variant = (object)$variant;
+
                 $inBlackList = VariantBlacklist::where('variant_id', $variant->id)->first();
                 if ($inBlackList) {
                     continue;
                 }
-
-                    //echo $variationCount."\n";
-                $variationCount++;
-                $variant = (object)$variant;
 
                 // Thay thế default value
                 if (!empty($variant->{'option' . $sizeOption})) {
