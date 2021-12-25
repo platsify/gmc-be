@@ -272,7 +272,7 @@ class PushToGMC implements ShouldQueue
                     if (!$inWhiteList) {
                         echo 'Khong trong whitelist ' .$variant->id."\n";
                         $newVariantBlacklist = new VariantBlacklist();
-                        $newVariantBlacklist->variant_id = $variant->id;
+                        $newVariantBlacklist->variant_id = (string)$variant->id;
                         $newVariantBlacklist->save();
                         continue;
                     }
