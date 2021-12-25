@@ -190,7 +190,12 @@ class PushToGMC implements ShouldQueue
 //echo $rawProduct->_id."\n";
             $variationCount = 0;
             foreach ($rawProduct->variants as $variant) {
-                //echo $variationCount."\n";
+                $inBlackList = VariantBlacklist::where('variant_id', $variant->id)->first();
+                if ($inBlackList) {
+                    continue;
+                }
+
+                    //echo $variationCount."\n";
                 $variationCount++;
                 $variant = (object)$variant;
 
@@ -273,6 +278,7 @@ class PushToGMC implements ShouldQueue
                     }
                 }
                 // HẾT Comment tạm 2512
+
 
 
                 // Map vào GMC
