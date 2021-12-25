@@ -268,7 +268,7 @@ class PushToGMC implements ShouldQueue
                 // Do trước kia chưa lưu blacklist và đã điều tra được ID của 2 project nên những ID ko có trong danh sách
                 // cũng sẽ cho vào blacklist`
                 if ($projectId == '619f3ea5ff798b78771ed965' || $projectId == '619f3f968e5de9606219e65c') {
-                    $inWhiteList = VariantWhitelist::where('variant_id', $variant->id)->first();
+                    $inWhiteList = VariantWhitelist::where('variant_id', (string)$variant->id)->first();
                     if (!$inWhiteList) {
                         echo 'Khong trong whitelist ' .$variant->id."\n";
                         $newVariantBlacklist = new VariantBlacklist();
