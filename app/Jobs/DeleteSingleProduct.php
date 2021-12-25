@@ -5,6 +5,7 @@ namespace App\Jobs;
 use App\Models\ProductMapCategory;
 use App\Models\ProductMapProjects;
 use App\Models\Shop;
+use App\Models\VariantBlacklist;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -19,16 +20,16 @@ class DeleteSingleProduct implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     private $shop;
-    private $product_id;
+    private $variant_id;
     /**
      * Create a new job instance.
      *
      * @return void
      */
-    public function __construct($shop, $product_id)
+    public function __construct($shop, $variant_id)
     {
         $this->shop = $shop;
-        $this->product_id = $product_id;
+        $this->variant_id = $variant_id;
     }
 
     /**
@@ -38,13 +39,17 @@ class DeleteSingleProduct implements ShouldQueue
      */
     public function handle()
     {
+        $variantBlacklist = new VariantBlacklist();
+        $variantBlacklist->variant_id = $this->variant_id;
+        $variantBlacklist->save();
+
         $gmcData = new Product();
         $gmcData->channel('online');
         $gmcData->lang('en');
         $gmcData->country('US');
-        $gmcData->offerId($this->product_id);
+        $gmcData->offerId($this->variant_id);
 
-        echo 'Delete '.$this->product_id."\n";
+        echo 'Delete '.$this->variant_id."\n";
         //echo  storage_path('app/'.$this->shop->gmc_credential);
         ProductApi::merchant([
             'app_name' => $this->shop->name,

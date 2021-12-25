@@ -268,7 +268,6 @@ class PushToGMC implements ShouldQueue
                     if (!$inWhiteList) {
                         $newVariantBlacklist = new VariantBlacklist();
                         $newVariantBlacklist->variant_id = $variant->id;
-                        $newVariantBlacklist->product_id = $rawProduct->id;
                         $newVariantBlacklist->save();
                         continue;
                     }
