@@ -51,9 +51,8 @@ class PushToGMC implements ShouldQueue
 
         shuffle($activeProjects);
         $projectId = $activeProjects[0];
-        // Comment tạm 2512
-        //$maps = ProductMapProjects::where('project_id', $projectId)->where('synced', false)->limit(8000)->get();
-        $maps = ProductMapProjects::where('project_id', $projectId)->limit(8000)->get();
+        echo 'Push project '.$projectId."\n";
+        $maps = ProductMapProjects::where('project_id', $projectId)->where('synced', false)->limit(8000)->get();
         if (!$maps) {
             //echo 'Het map roi' . "\n";
             return;
@@ -268,6 +267,7 @@ class PushToGMC implements ShouldQueue
                 if ($projectId == '619f3ea5ff798b78771ed965' || $projectId == '619f3f968e5de9606219e65c') {
                     $inWhiteList = VariantWhitelist::where('variant_id', $variant->id)->first();
                     if (!$inWhiteList) {
+                        echo 'Khong trong whitelist ' .$variant->id."\n";
                         $newVariantBlacklist = new VariantBlacklist();
                         $newVariantBlacklist->variant_id = $variant->id;
                         $newVariantBlacklist->save();
