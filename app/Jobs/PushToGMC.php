@@ -43,8 +43,8 @@ class PushToGMC implements ShouldQueue
     public function handle()
     {
         // Comment tạm 2512
-        $activeProjects = ['619f3f968e5de9606219e65c', '619f3ea5ff798b78771ed965'];
-        //$activeProjects = Project::where('active', true)->get()->pluck('_id')->toArray();
+        //$activeProjects = ['619f3f968e5de9606219e65c', '619f3ea5ff798b78771ed965'];
+        $activeProjects = Project::where('active', true)->get()->pluck('_id')->toArray();
         if (!$activeProjects || count($activeProjects) == 0) {
             return;
         }
@@ -54,7 +54,7 @@ class PushToGMC implements ShouldQueue
         echo 'Push project '.$projectId."\n";
         $maps = ProductMapProjects::where('project_id', $projectId)->where('synced', false)->limit(3000)->get();
         if (!$maps) {
-            //echo 'Het map roi' . "\n";
+            echo 'Het map roi' . "\n";
             return;
         }
         //echo count($maps);
@@ -237,7 +237,7 @@ class PushToGMC implements ShouldQueue
                     }
                 }
 
-                // Loại bỏ các sản phẩm có Size nhưng ko phải S và Throw
+                // Loại bỏ các sản phẩm có Size nhưng ko phải 'S', 'Throw', 'Tween', 'Twin'
                 //echo $rawProduct->options[$sizeOption-1]['name'] . ' = ' .$size."\n";
                 if (isset($rawProduct->options[$sizeOption - 1]) && isset($rawProduct->options[$sizeOption - 1]) && $rawProduct->options[$sizeOption - 1]['name'] == 'Size' && !in_array($size, ['S', 'Throw', 'Tween', 'Twin'])) {
                     //echo 'Bỏ qua'. "\n";
