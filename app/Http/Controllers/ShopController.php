@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\SyncWoo;
 use App\Jobs\DeleteSingleProduct;
 use App\Jobs\SyncShopbase;
 use App\Models\Project;
@@ -122,7 +123,11 @@ class ShopController extends Controller
         $message = __('Cập nhật shop thành công');
         if ($isNewShop) {
             $message = __('Thêm shop thành công');
-            SyncShopbase::dispatch($shop->id, 0);
+            if ($shop->type == Shop::SHOP_TYPE_SHOPBASE) {
+                SyncShopbase::dispatch($shop->id, 0);
+            } else if ($shop->type == Shop::SHOP_TYPE_WOO) {
+                SyncWoo::dispatch($shop->id, 0);
+            }
         }
 
         return response()->json([

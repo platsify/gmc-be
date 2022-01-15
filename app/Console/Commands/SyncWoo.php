@@ -40,28 +40,7 @@ class SyncWoo extends Command
      */
     public function handle()
     {
-        $db = 'genterbo_0001';
-        $user = 'genterbo_genterbook2021';
-        $pass = 'aRd354H~TW5g';
-        $host = '45.148.121.22';
-        Config::set("database.connections.genterbook", [
-            'driver' => 'mysql',
-            "host" => $host,
-            "database" => $db,
-            "username" => $user,
-            "password" => $pass,
-            "port" => '3306',
-            'charset'   => 'utf8',
-            'collation' => 'utf8_unicode_ci',
-            'prefix'    => '',
-            'strict'    => false,
-        ]);
 
-        $categories = DB::connection('genterbook')->select('SELECT * FROM t4lwqw_term_taxonomy WHERE taxonomy = "product_cat"');
-        foreach ($categories as $category) {
-            echo $category->term_id;
-            echo '<br>';
-        }
         return Command::SUCCESS;
     }
 }

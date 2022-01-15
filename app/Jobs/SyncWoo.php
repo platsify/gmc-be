@@ -20,6 +20,7 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Arr;
 
 class SyncWoo implements ShouldQueue
 {
@@ -63,7 +64,7 @@ class SyncWoo implements ShouldQueue
         $this->productMapCategoryRepository = $productMapCategoryRepository;
         $this->rawProductRepository = $rawProductRepository;
 
-        $shop = Shop::where('_id', $this->shopId)->where('type', Shop::SHOP_TYPE_SHOPBASE)->first();
+        $shop = Shop::where('_id', $this->shopId)->where('type', Shop::SHOP_TYPE_WOO)->first();
         if (!$shop) {
             echo 'Shop not found';
             return;
@@ -89,10 +90,10 @@ class SyncWoo implements ShouldQueue
     public function initWooConnection() {
         Config::set("database.connections.".$this->connectionName, [
             'driver' => 'mysql',
-            "host" => $this->shop->dbHost,
+            "host" => $this->shop->dbIp,
             "database" => $this->shop->dbName,
             "username" => $this->shop->dbUserName,
-            "password" => $this->shop->dbPass,
+            "password" => $this->shop->dbPassword,
             "port" => $this->shop->dbPort,
             'charset'   => 'utf8',
             'collation' => 'utf8_unicode_ci',
@@ -103,18 +104,18 @@ class SyncWoo implements ShouldQueue
     public function syncCategories()
     {
         $categories = array();
-        $termTaxonomies = DB::connection($this->connectionName)->select('SELECT * FROM term_taxonomy WHERE taxonomy = "product_cat"');
-        $termIds = $termTaxonomies->pluck('term_id')->toArray();
+        $termTaxonomies = DB::connection($this->connectionName)->select('SELECT term_id FROM t4lwqw_term_taxonomy WHERE taxonomy = "product_cat"');
+        $termIds = Arr::pluck($termTaxonomies, 'term_id');
 
         $termIdsString = implode(',', $termIds);
-        $terms = DB::connection($this->connectionName)->select('SELECT * FROM terms WHERE term_id IN('.$termIdsString.')');
+        $terms = DB::connection($this->connectionName)->select('SELECT * FROM  t4lwqw_terms WHERE term_id IN('.$termIdsString.')');
         if ($terms && !empty($terms)) {
             foreach ($terms as $collection) {
                 $collection = (object)$collection;
                 $categories[] = array(
                     'shop_id' => $this->shopId,
                     'active' => true,
-                    'original_id' => $this->shopId . '__' . $collection->id,
+                    'original_id' => $this->shopId . '__' . $collection->term_id,
                     'name' => $collection->name
                 );
             }
