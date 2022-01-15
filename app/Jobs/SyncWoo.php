@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Arr;
+use Automattic\WooCommerce\Client;
 
 class SyncWoo implements ShouldQueue
 {
@@ -31,6 +32,9 @@ class SyncWoo implements ShouldQueue
 
     private $lastSync;
     private $shopId;
+
+    /** @var Client $object */
+    private $woo;
 
     /** @var Shop $object */
     private $shop;
@@ -76,8 +80,7 @@ class SyncWoo implements ShouldQueue
 
         $this->shop = $shop;
 
-        $this->initWooConnection();
-
+        $this->initWooClient();
         $this->syncCategories();
 
         // TODO: Using ShopRepository
@@ -87,35 +90,27 @@ class SyncWoo implements ShouldQueue
 //        $this->shop->save();
     }
 
-    public function initWooConnection() {
-        Config::set("database.connections.".$this->connectionName, [
-            'driver' => 'mysql',
-            "host" => $this->shop->dbIp,
-            "database" => $this->shop->dbName,
-            "username" => $this->shop->dbUserName,
-            "password" => $this->shop->dbPassword,
-            "port" => $this->shop->dbPort,
-            'charset'   => 'utf8',
-            'collation' => 'utf8_unicode_ci',
-            'prefix'    => $this->shop->dbPrefix,
-            'strict'    => false,
-        ]);
+    public function initWooClient() {
+        $this->woo = new Client(
+            $this->shop->public_url,
+            $this->shop->api_key,
+            $this->shop->api_secret,
+            [
+                'version' => 'wc/v3',
+            ]
+        );
     }
     public function syncCategories()
     {
         $categories = array();
-        $termTaxonomies = DB::connection($this->connectionName)->select('SELECT term_id FROM t4lwqw_term_taxonomy WHERE taxonomy = "product_cat"');
-        $termIds = Arr::pluck($termTaxonomies, 'term_id');
-
-        $termIdsString = implode(',', $termIds);
-        $terms = DB::connection($this->connectionName)->select('SELECT * FROM  t4lwqw_terms WHERE term_id IN('.$termIdsString.')');
-        if ($terms && !empty($terms)) {
-            foreach ($terms as $collection) {
+        $items = $this->woo->get('products/categories');
+        if ($items && !empty($items)) {
+            foreach ($items as $collection) {
                 $collection = (object)$collection;
                 $categories[] = array(
                     'shop_id' => $this->shopId,
                     'active' => true,
-                    'original_id' => $this->shopId . '__' . $collection->term_id,
+                    'original_id' => $this->shopId . '__' . $collection->id,
                     'name' => $collection->name
                 );
             }
