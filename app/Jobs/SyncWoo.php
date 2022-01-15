@@ -17,9 +17,11 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
-class SyncShopbase implements ShouldQueue
+class SyncWoo implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
@@ -36,10 +38,7 @@ class SyncShopbase implements ShouldQueue
     private $productRepository;
     private $productMapCategoryRepository;
     private $rawProductRepository;
-
-    /** @var Shopbase $object */
-    private $shopbase;
-
+    private $connectionName;
     /**
      * Create a new job instance.
      *
@@ -49,6 +48,7 @@ class SyncShopbase implements ShouldQueue
     {
         $this->lastSync = $lastSync;
         $this->shopId = $shopId;
+        $this->connectionName = 'woo_shop_'.$shopId;
     }
 
     /**
@@ -75,16 +75,9 @@ class SyncShopbase implements ShouldQueue
 
         $this->shop = $shop;
 
-        // TODO: Using ShopRepository
-        // Lưu trạng thái job đang chạy
-        $this->shop->sync_status = Shop::SHOP_SYNC_RUNNING;
-        $this->shop->save();
+        $this->initWooConnection();
 
-
-        $this->shopbase = new Shopbase($shop->url, $shop->api_key, $shop->api_secret);
         $this->syncCategories();
-        $this->countProducts();
-        $this->syncProducts();
 
         // TODO: Using ShopRepository
         // Save done job and last sync
@@ -93,50 +86,36 @@ class SyncShopbase implements ShouldQueue
 //        $this->shop->save();
     }
 
-    public function countProducts() {
-        $sbCountProduct = $this->shopbase->countProducts();
-        if ($sbCountProduct && !empty($sbCountProduct->count)) {
-            // TODO: Using ShopRepository
-            $this->shop->total_product = $sbCountProduct->count;
-            $this->shop->save();
-        }
+    public function initWooConnection() {
+        Config::set("database.connections.".$this->connectionName, [
+            'driver' => 'mysql',
+            "host" => $this->shop->dbHost,
+            "database" => $this->shop->dbName,
+            "username" => $this->shop->dbUserName,
+            "password" => $this->shop->dbPass,
+            "port" => $this->shop->dbPort,
+            'charset'   => 'utf8',
+            'collation' => 'utf8_unicode_ci',
+            'prefix'    => $this->shop->dbPrefix,
+            'strict'    => false,
+        ]);
     }
-
-    public function syncProducts()
-    {
-        $categories = $this->categoryRepository->findManyBySpecificField('shop_id', $this->shopId);
-        foreach ($categories as $category) {
-            SyncShopebaseByCategory::dispatch($category, $this->lastSync, $this->shop, $this->shopId, $this->shopbase);
-        }
-    }
-
     public function syncCategories()
     {
         $categories = array();
-        $customCollections = $this->shopbase->getCustomCollections();
-        $smartCollections = $this->shopbase->getSmartCollections();
+        $termTaxonomies = DB::connection($this->connectionName)->select('SELECT * FROM term_taxonomy WHERE taxonomy = "product_cat"');
+        $termIds = $termTaxonomies->pluck('term_id')->toArray();
 
-        if ($customCollections && !empty($customCollections->custom_collections)) {
-            foreach ($customCollections->custom_collections as $collection) {
-
+        $termIdsString = implode(',', $termIds);
+        $terms = DB::connection($this->connectionName)->select('SELECT * FROM terms WHERE term_id IN('.$termIdsString.')');
+        if ($terms && !empty($terms)) {
+            foreach ($terms as $collection) {
                 $collection = (object)$collection;
                 $categories[] = array(
                     'shop_id' => $this->shopId,
-                    'active' => $collection->published,
+                    'active' => true,
                     'original_id' => $this->shopId . '__' . $collection->id,
-                    'name' => $collection->title
-                );
-            }
-        }
-
-        if ($smartCollections && !empty($smartCollections->smart_collections)) {
-            foreach ($smartCollections->smart_collections as $collection) {
-                $collection = (object)$collection;
-                $categories[] = array(
-                    'shop_id' => $this->shopId,
-                    'active' => $collection->published,
-                    'original_id' => $this->shopId . '__' . $collection->id,
-                    'name' => $collection->title
+                    'name' => $collection->name
                 );
             }
         }
