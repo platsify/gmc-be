@@ -218,11 +218,11 @@ class PushToGMC implements ShouldQueue
 				if (empty($variant->sku)) {
 					echo  $rawProduct->system_product_id . ' rỗng SKU '."\n";
 				}
-				//$inBlackList = VariantBlacklist::where('variant_id', $variant->sku)->first();
-				//if ($inBlackList) {
-                //    echo $variant->sku. " co SKU nam trong blacklist\n";
-                //    continue;
-                //}
+				$inBlackList = VariantBlacklist::where('variant_id', $variant->sku)->first();
+				if ($inBlackList) {
+                    echo $variant->sku. " co SKU nam trong blacklist\n";
+                    continue;
+                }
 				
                 // Thay thế default value
                 if ($rawProduct->isWooProduct) {
@@ -312,8 +312,7 @@ class PushToGMC implements ShouldQueue
                 $gmcData->gender($gender);
                 $gmcData->adult($adult);
                 if ($rawProduct->isWooProduct) {
-					//$gmcData->offerId($variant->sku);
-					$gmcData->offerId($variant->id);
+					$gmcData->offerId($variant->sku);
 					$imageLink = $variant->image['src'];
 					if (!$imageLink) {
 						$imageLink = $variant->images[0]['src'];
