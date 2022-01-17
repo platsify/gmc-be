@@ -40,7 +40,7 @@ class SyncWoo extends Command
      */
     public function handle()
     {
-        \App\Jobs\SyncWoo::dispatch('61e2f08bd108000054002e34', 0);
+        \App\Jobs\SyncWoo::dispatch('61e43c73ad390000f7003033', 0);
         return Command::SUCCESS;
     }
 }

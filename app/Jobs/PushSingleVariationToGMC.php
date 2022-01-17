@@ -37,7 +37,7 @@ class PushSingleVariationToGMC implements ShouldQueue
      */
     public function handle()
     {
-		echo storage_path('app/'.$this->shop->gmc_credential)."\n\n";
+		//echo storage_path('app/'.$this->shop->gmc_credential)."\n\n";
         ProductApi::merchant([
             'app_name' => $this->shop->name,
             'merchant_id' => $this->shop->gmc_id,
@@ -45,14 +45,12 @@ class PushSingleVariationToGMC implements ShouldQueue
         ])->insert($this->gmcData)->then(function($response){
 			$this->map->synced = true;
 			$this->map->save();
-            //echo 'Product inserted '.$response;
         })->otherwise(function($response){
             throw new Exception($response);
         })->catch(function($e){
-            echo($e->getResponse()->getBody()->getContents());
+            throw new Exception($e);
         });
-        //echo "\n";
-	
+
         return;
     }
 }

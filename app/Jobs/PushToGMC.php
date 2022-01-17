@@ -59,8 +59,6 @@ class PushToGMC implements ShouldQueue
         }
         //echo count($maps);
 
-        //ProductMapProjects::where('project_id', $project->id)->where('synced', false)->chunk(100, function ($maps) use ($project, $shop, $defaultValues);
-        {
         foreach ($maps as $map) {
             $project = Project::where('_id', $map->project_id)->first();
             if (!$project) {
@@ -93,14 +91,21 @@ class PushToGMC implements ShouldQueue
             }
 
             if (!$rawProduct->variants) {
-                print_r($rawProduct->id);
                 continue;
             }
 
-            if (!$rawProduct->image['src']) {
-                echo $rawProduct->id. " Khong co anh\n";
-                continue;
+            if ($rawProduct->isWooProduct) {
+                if (empty($rawProduct->images) || !$rawProduct->images[0]['src']) {
+                    echo $rawProduct->id. " Khong co anh\n";
+                    continue;
+                }
+            } else {
+                if (!$rawProduct->image['src']) {
+                    echo $rawProduct->id. " Khong co anh\n";
+                    continue;
+                }
             }
+
 
 
             // Các field có thể ghi đè
@@ -175,7 +180,13 @@ class PushToGMC implements ShouldQueue
             $colorOption = 99999;
             $sizeOption = 99999;
             $typeOption = 9999;
-            foreach ($rawProduct->options as $item) {
+
+
+            $options = $rawProduct->options;
+            if ($rawProduct->isWooProduct) {
+                $options = $rawProduct->attributes;
+            }
+            foreach ($options as $item) {
                 $item = (object)$item;
                 if ($item->name == 'Size') {
                     $sizeOption = $item->position;
@@ -188,10 +199,14 @@ class PushToGMC implements ShouldQueue
                 }
             }
 
-//echo $rawProduct->_id."\n";
+            $cloneRawProduct = clone $rawProduct;
+            if (empty($rawProduct->variants)) {
+                $rawProduct->variants = array();
+                $rawProduct->variants[0] = $cloneRawProduct;
+            }
+
             foreach ($rawProduct->variants as $variant) {
                 $variant = (object)$variant;
-
                 $inBlackList = VariantBlacklist::where('variant_id', $variant->id)->first();
                 if ($inBlackList) {
                     echo $variant->id. " nam trong blacklist\n";
@@ -199,14 +214,34 @@ class PushToGMC implements ShouldQueue
                 }
 
                 // Thay thế default value
-                if (!empty($variant->{'option' . $sizeOption})) {
-                    $size = $variant->{'option' . $sizeOption};
-                }
-                if (!empty($variant->{'option' . $colorOption})) {
-                    $color = $variant->{'option' . $colorOption};
-                }
-                if (!empty($variant->{'option' . $typeOption})) {
-                    $type = $variant->{'option' . $typeOption};
+                if ($rawProduct->isWooProduct) {
+                    $buildTitle = $rawProduct->name;
+                    foreach ($variant->attributes as $attribute) {
+                        $attribute = (object)$attribute;
+                        if ($attribute->name == 'Size') {
+                            $size = $attribute->option;
+                            $buildTitle .= ' Size: '.$size;
+                        }
+                        if ($attribute->name == 'Color') {
+                            $color = $attribute->option;
+                            $buildTitle .= ' Color: '.$color;
+                        }
+                        if ($attribute->name == 'Type') {
+                            $type = $attribute->option;
+                            $buildTitle .= ' Type: '.$type;
+                        }
+                    }
+                } else {
+                    $buildTitle = $rawProduct->title . ' - ' . $variant->title;
+                    if (!empty($variant->{'option' . $sizeOption})) {
+                        $size = $variant->{'option' . $sizeOption};
+                    }
+                    if (!empty($variant->{'option' . $colorOption})) {
+                        $color = $variant->{'option' . $colorOption};
+                    }
+                    if (!empty($variant->{'option' . $typeOption})) {
+                        $type = $variant->{'option' . $typeOption};
+                    }
                 }
 
                 // Tìm xem SP này có thuộc collection là bedding ko
@@ -239,7 +274,7 @@ class PushToGMC implements ShouldQueue
 
                 // Loại bỏ các sản phẩm có Size nhưng ko phải 'S', 'Throw', 'Tween', 'Twin'
                 //echo $rawProduct->options[$sizeOption-1]['name'] . ' = ' .$size."\n";
-                if (isset($rawProduct->options[$sizeOption - 1]) && isset($rawProduct->options[$sizeOption - 1]) && $rawProduct->options[$sizeOption - 1]['name'] == 'Size' && !in_array($size, ['S', 'Throw', 'Tween', 'Twin'])) {
+                if ($sizeOption != 99999 && !in_array($size, ['S', 'Throw', 'Tween', 'Twin'])) {
                     //echo 'Bỏ qua'. "\n";
                     continue;
                 }
@@ -249,37 +284,6 @@ class PushToGMC implements ShouldQueue
                     // echo 'Bỏ qua vì yêu cầu gtin mà variation này ko có';
                     continue;
                 }
-
-//                    if (!empty($project->only_option1) && (!isset($variant->option1) || $variant->option1 != $project->only_option1)) {
-//                        //echo 'Option 1 not match';
-//                        continue;
-//                    }
-//                    if (!empty($project->only_option2) && (!isset($variant->option2) || $variant->option2 != $project->only_option2)) {
-//                        //echo 'Option 2 not match';
-//                        continue;
-//                    }
-//                    if (!empty($project->only_option3) && (!isset($variant->option3) || $variant->option3 != $project->only_option3)) {
-//                        continue;
-//                    }
-
-
-                // Comment tạm 2512
-                // Bỏ qua những variant nằm trong blacklist
-                // Do trước kia chưa lưu blacklist và đã điều tra được ID của 2 project nên những ID ko có trong danh sách
-                // cũng sẽ cho vào blacklist`
-                if ($projectId == '619f3ea5ff798b78771ed965' || $projectId == '619f3f968e5de9606219e65c') {
-                    $inWhiteList = VariantWhitelist::where('variant_id', (string)$variant->id)->first();
-                    if (!$inWhiteList) {
-                        echo 'Khong trong whitelist ' .$variant->id."\n";
-                        $newVariantBlacklist = new VariantBlacklist();
-                        $newVariantBlacklist->variant_id = (string)$variant->id;
-                        $newVariantBlacklist->save();
-                        continue;
-                    }
-                }
-                // HẾT Comment tạm 2512
-
-
 
                 // Map vào GMC
                 $gmcData = new Product();
@@ -296,13 +300,42 @@ class PushToGMC implements ShouldQueue
                 $gmcData->identifierExists($identifierExists);
                 $gmcData->gender($gender);
                 $gmcData->adult($adult);
-                $gmcData->title(mb_substr($rawProduct->title . ' - ' . $variant->title, 0, 150));
-                $gmcData->description($rawProduct->body_html);
+                if ($rawProduct->isWooProduct) {
+                    $gmcData->description($rawProduct->description);
+                    $gmcData->link($variant->permalink);
+                    $gmcData->image($variant->image['src']);
+                    // Tìm Gtin, mpn
+                    foreach ($rawProduct->meta_data as $meta_datum) {
+                        if ($meta_datum['key'] == '_wpsso_product_gtin' && !empty($meta_datum['value'])) {
+                            $gmcData->gtin($meta_datum['value']);
+                        }
+                        if ($meta_datum['key'] == '_wpsso_product_mfr_part_no' && !empty($meta_datum['value'])) {
+                            $gmcData->mpn($meta_datum['value']);
+                        }
+                    }
+
+                    foreach ($variant->meta_data as $meta_datum) {
+                        if ($meta_datum['key'] == '_wpsso_product_gtin' && !empty($meta_datum['value'])) {
+                            $gmcData->gtin($meta_datum['value']);
+                        }
+                        if ($meta_datum['key'] == '_wpsso_product_mfr_part_no' && !empty($meta_datum['value'])) {
+                            $gmcData->mpn($meta_datum['value']);
+                        }
+                    }
+                } else {
+                    $gmcData->description($rawProduct->body_html);
+                    $gmcData->link(rtrim($shop->public_url, '/') . '/products/' . $rawProduct->handle . '?variant=' . $variant->id);
+                    $gmcData->image($rawProduct->image['src']); // TODO: Tìm ảnh cho từng Variant
+                    if (!empty($variant->barcode)) {
+                        $gmcData->gtin($variant->barcode);
+                    }
+                }
+
                 //$gmcData->id($gmcData->channel . ':'.$gmcData->contentLanguage.':'.$gmcData->targetCountry.':'.$gmcData->offerId);
-                $gmcData->link(rtrim($shop->public_url, '/') . '/products/' . $rawProduct->handle . '?variant=' . $variant->id);
+                $gmcData->title(mb_substr($buildTitle, 0, 150));
                 $gmcData->link = str_replace('/products/products/', '/products/', $gmcData->link);
 
-                $gmcData->image($rawProduct->image['src']);
+                // Build them cac bien con lai
                 $gmcData->lang('en');
                 $gmcData->online('online');
                 $gmcData->inStock(true);
@@ -314,9 +347,6 @@ class PushToGMC implements ShouldQueue
                 $gmcData->shipping($shipping);
                 $gmcData->offerId($variant->id);
                 $gmcData->taxes(['country' => 'us', 'rate' => 6, 'taxShip' => true]);
-                if (!empty($variant->barcode)) {
-                    $gmcData->gtin($variant->barcode);
-                }
                 $gmcData->condition('new');
                 $gmcData->brand($shop->name);
                 $gmcData->itemGroupId($variant->id);
@@ -372,11 +402,10 @@ class PushToGMC implements ShouldQueue
                 }
                 $project->save();
                 PushSingleVariationToGMC::dispatch($shop, $gmcData, $map)->onQueue('gmc');
-                echo 'Add job PushSingleVariationToGMC cho id'.$variant->id."\n";
+                //echo 'Add job PushSingleVariationToGMC cho id'.$variant->id."\n";
                 //echo $cou . "\n";
             }
         }
-        };
         return Command::SUCCESS;
     }
 }

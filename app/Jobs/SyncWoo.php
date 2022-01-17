@@ -81,13 +81,21 @@ class SyncWoo implements ShouldQueue
         $this->shop = $shop;
 
         $this->initWooClient();
+
         $this->syncCategories();
+        $this->syncProducts();
 
         // TODO: Using ShopRepository
         // Save done job and last sync
 //        $this->shop->sync_status = Shop::SHOP_SYNC_DONE;
 //        $this->shop->last_sync = time();
 //        $this->shop->save();
+    }
+
+    public function syncProducts() {
+        for ($i = 1; $i < 6; $i++) {
+            SyncWooByPage::dispatch($i, $this->shop, $this->shopId, $this->woo);
+        }
     }
 
     public function initWooClient() {
@@ -103,22 +111,25 @@ class SyncWoo implements ShouldQueue
     public function syncCategories()
     {
         $categories = array();
-        $items = $this->woo->get('products/categories');
-        if ($items && !empty($items)) {
-            foreach ($items as $collection) {
-                $collection = (object)$collection;
-                $categories[] = array(
-                    'shop_id' => $this->shopId,
-                    'active' => true,
-                    'original_id' => $this->shopId . '__' . $collection->id,
-                    'name' => $collection->name
-                );
+        $items = array();
+        do {
+            $items = $this->woo->get('products/categories', ['page' => 1, 'per_page' => 100]);
+            if ($items && !empty($items)) {
+                foreach ($items as $collection) {
+                    $collection = (object)$collection;
+                    $categories[] = array(
+                        'shop_id' => $this->shopId,
+                        'active' => true,
+                        'original_id' => $this->shopId . '__' . $collection->id,
+                        'name' => $collection->name
+                    );
+                }
             }
-        }
 
-        // Upsert category
-        foreach ($categories as $category) {
-            $this->categoryRepository->upsertByOriginalId($category['original_id'], $category);
-        }
+            // Upsert category
+            foreach ($categories as $category) {
+                $this->categoryRepository->upsertByOriginalId($category['original_id'], $category);
+            }
+        } while(empty($items));
     }
 }
