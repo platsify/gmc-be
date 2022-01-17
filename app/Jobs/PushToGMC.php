@@ -313,6 +313,7 @@ class PushToGMC implements ShouldQueue
                 $gmcData->adult($adult);
                 if ($rawProduct->isWooProduct) {
 					$gmcData->offerId($variant->sku);
+					 $gmcData->itemGroupId($variant->sku);
 					$imageLink = $variant->image['src'];
 					if (!$imageLink) {
 						$imageLink = $variant->images[0]['src'];
@@ -343,6 +344,7 @@ class PushToGMC implements ShouldQueue
                     }
                 } else {
 					$gmcData->offerId($variant->id);
+					$gmcData->itemGroupId($variant->id);
                     $gmcData->description($rawProduct->body_html);
                     $gmcData->link(rtrim($shop->public_url, '/') . '/products/' . $rawProduct->handle . '?variant=' . $variant->id);
                     $gmcData->image($rawProduct->image['src']); // TODO: Tìm ảnh cho từng Variant
@@ -368,7 +370,7 @@ class PushToGMC implements ShouldQueue
                 $gmcData->taxes(['country' => 'us', 'rate' => 6, 'taxShip' => true]);
                 $gmcData->condition('new');
                 $gmcData->brand($shop->name);
-                $gmcData->itemGroupId($variant->id);
+               
                 //$gmcData->customValues(['ships_from_country' => $shipFromCountry]);
 
                 $countCustomLabel = 0;
