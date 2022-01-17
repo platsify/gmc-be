@@ -166,6 +166,10 @@ class ProjectController extends Controller
             ]);
         }
 
+        $project->active = true;
+        $project->save();
+
+
         ProductMapProjects::where('project_id', (string)$project->id)->update(['synced' => false]);
 
         return response()->json([
