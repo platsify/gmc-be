@@ -215,7 +215,15 @@ class PushToGMC implements ShouldQueue
                     echo $variant->id. " nam trong blacklist\n";
                     continue;
                 }
-
+				if (empty($variant->sku)) {
+					echo  $rawProduct->system_product_id . ' rỗng SKU '."\n";
+				}
+				//$inBlackList = VariantBlacklist::where('variant_id', $variant->sku)->first();
+				//if ($inBlackList) {
+                //    echo $variant->sku. " co SKU nam trong blacklist\n";
+                //    continue;
+                //}
+				
                 // Thay thế default value
                 if ($rawProduct->isWooProduct) {
                     $buildTitle = $rawProduct->name;
@@ -304,6 +312,8 @@ class PushToGMC implements ShouldQueue
                 $gmcData->gender($gender);
                 $gmcData->adult($adult);
                 if ($rawProduct->isWooProduct) {
+					//$gmcData->offerId($variant->sku);
+					$gmcData->offerId($variant->id);
 					$imageLink = $variant->image['src'];
 					if (!$imageLink) {
 						$imageLink = $variant->images[0]['src'];
@@ -333,6 +343,7 @@ class PushToGMC implements ShouldQueue
                         }
                     }
                 } else {
+					$gmcData->offerId($variant->id);
                     $gmcData->description($rawProduct->body_html);
                     $gmcData->link(rtrim($shop->public_url, '/') . '/products/' . $rawProduct->handle . '?variant=' . $variant->id);
                     $gmcData->image($rawProduct->image['src']); // TODO: Tìm ảnh cho từng Variant
@@ -355,7 +366,6 @@ class PushToGMC implements ShouldQueue
                 $shipping->price($shippingPrice, 'USD');
                 $shipping->country($shipFromCountry);
                 $gmcData->shipping($shipping);
-                $gmcData->offerId($variant->id);
                 $gmcData->taxes(['country' => 'us', 'rate' => 6, 'taxShip' => true]);
                 $gmcData->condition('new');
                 $gmcData->brand($shop->name);
