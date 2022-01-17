@@ -31,7 +31,8 @@ Route::resource('product', ProductController::class);
 
 Route::apiResource('shop', ShopController::class);
 
-Route::get('re-map-product-project', [ProjectController::class, 'mapNewProduct']);
+Route::get('project/repush', [ProjectController::class, 'repush']);
+Route::get('project/remap', [ProjectController::class, 'mapNewProduct']);
 Route::apiResource('project', ProjectController::class);
 
 // Category

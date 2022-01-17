@@ -53,13 +53,12 @@ class PushToGMC implements ShouldQueue
         $projectId = $activeProjects[0];
         echo 'Push project '.$projectId."\n";
         $maps = ProductMapProjects::where('project_id', $projectId)->where('synced', false)->limit(3000)->get();
-		
+
         if (!$maps) {
             echo 'Het map roi' . "\n";
             return;
         }
         //echo count($maps);
-
         foreach ($maps as $map) {
             $project = Project::where('_id', $map->project_id)->first();
             if (!$project) {
@@ -100,6 +99,7 @@ class PushToGMC implements ShouldQueue
 				}
 			}
             if (!$rawProduct->variants) {
+                echo "Ko co variants \n";
                 continue;
             }
 
@@ -215,15 +215,18 @@ class PushToGMC implements ShouldQueue
                     echo $variant->id. " nam trong blacklist\n";
                     continue;
                 }
-				if (empty($variant->sku)) {
-					echo  $rawProduct->system_product_id . ' rỗng SKU '."\n";
-				}
-				$inBlackList = VariantBlacklist::where('variant_id', $variant->sku)->first();
-				if ($inBlackList) {
-                    echo $variant->sku. " co SKU nam trong blacklist\n";
-                    continue;
+                if ($rawProduct->isWooProduct) {
+                    if (empty($variant->sku)) {
+                        echo "SKU rong ".$rawProduct->system_product_id."\n";
+                        continue;
+                    }
+                    $inBlackList = VariantBlacklist::where('variant_id', $variant->sku)->first();
+                    if ($inBlackList) {
+                        echo $variant->sku . " co SKU nam trong blacklist\n";
+                        continue;
+                    }
                 }
-				
+
                 // Thay thế default value
                 if ($rawProduct->isWooProduct) {
                     $buildTitle = $rawProduct->name;
@@ -313,7 +316,7 @@ class PushToGMC implements ShouldQueue
                 $gmcData->adult($adult);
                 if ($rawProduct->isWooProduct) {
 					$gmcData->offerId($variant->sku);
-					 $gmcData->itemGroupId($variant->sku);
+					$gmcData->itemGroupId($variant->sku);
 					$imageLink = $variant->image['src'];
 					if (!$imageLink) {
 						$imageLink = $variant->images[0]['src'];
@@ -370,7 +373,7 @@ class PushToGMC implements ShouldQueue
                 $gmcData->taxes(['country' => 'us', 'rate' => 6, 'taxShip' => true]);
                 $gmcData->condition('new');
                 $gmcData->brand($shop->name);
-               
+
                 //$gmcData->customValues(['ships_from_country' => $shipFromCountry]);
 
                 $countCustomLabel = 0;

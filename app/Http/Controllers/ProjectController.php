@@ -43,7 +43,7 @@ class ProjectController extends Controller
 		if (!empty($request->shop_id)) {
 			$query->where('shop_id', $request->shop_id);
 		}
-		
+
         if (!empty($request->search)) {
             $search = is_numeric($request->search) ? (int)$request->search : $request->search;
             $colsToSearch = [
@@ -94,7 +94,7 @@ class ProjectController extends Controller
             return response()->json(['status' => 'success', 'data' => $result, 'message' => "Thêm thành công"]);
         }
     }
-	
+
 	public function mapNewProduct(Request $request) {
 		MapProductToProject::dispatch($request->project_id)->onQueue('gmc');
 		return response()->json(['status' => 'success', 'data' => [], 'message' => "Yêu cầu thành công"]);
@@ -154,6 +154,23 @@ class ProjectController extends Controller
         return response()->json([
             'status' => 'error',
             'message' => __('Xóa project thất bại')
+        ]);
+    }
+
+    public function repush(Request $request) {
+        $project = Project::where('_id', $request->project_id)->first();
+        if (!$project) {
+            return response()->json([
+                'status' => 'error',
+                'message' => __('Project không tồn tại')
+            ]);
+        }
+
+        ProductMapProjects::where('project_id', (string)$project->id)->update(['synced' => false]);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => __('Project được active và phẩm sắp được đẩy lại (mỗi 5p random 1 project)')
         ]);
     }
 
