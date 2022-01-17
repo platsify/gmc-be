@@ -227,15 +227,19 @@ class ShopController extends Controller
             ]);
         }
 
-        if (!isset($shop->sync_status) && $shop->sync_status == Shop::SHOP_SYNC_RUNNING) {
-            return response()->json([
-                'status' => 'success',
-                'message' => 'You submitted the request before, it has already been added to the queue'
-            ]);
-        }
+//        if (!isset($shop->sync_status) && $shop->sync_status == Shop::SHOP_SYNC_RUNNING) {
+//            return response()->json([
+//                'status' => 'success',
+//                'message' => 'You submitted the request before, it has already been added to the queue'
+//            ]);
+//        }
 
         $lastSync = ($shop->last_sync) ?: 0;
-        SyncShopbase::dispatch($shop->id, $lastSync);
+        if ($shop->type == Shop::SHOP_TYPE_SHOPBASE) {
+            SyncShopbase::dispatch($shop->id, $lastSync);
+        } else {
+            SyncWoo::dispatch($shop->id, $lastSync);
+        }
 
         return response()->json([
             'status' => 'success',
