@@ -64,24 +64,7 @@ class MapProductToProject implements ShouldQueue
 
 
         $rawProductsQuery->chunk(1000,  function($rawProducts) use ($project) {
-            foreach ($rawProducts as $rawProduct) {
-                // TODO: Xu ly san pham ko co variation
-                if (!$rawProduct->variants) {
-                    continue;
-                }
-                $foundGtin = false;
-                foreach($rawProduct->variants AS $variation) {
-                    //  Điều kiện lọc
-                    if ($project->require_gtin && !empty($variant->barcode)) {
-                        $foundGtin = true;
-                        break;
-                    }
-                }
-                if ($project->require_gtin && !$foundGtin) {
-                    echo 'Project nay yeu cau GTIN nhung variation nay lai ko co barcode';
-                    continue;
-                }
-
+            foreach ($rawProducts as $rawProduct) {				
                 $mapped = ProductMapProjects::where('product_id', $rawProduct->system_product_id)->where('project_id', $this->projectId)->first();
                 if (!$mapped) {
                     ProductMapProjects::create([

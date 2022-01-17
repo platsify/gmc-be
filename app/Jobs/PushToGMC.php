@@ -53,6 +53,7 @@ class PushToGMC implements ShouldQueue
         $projectId = $activeProjects[0];
         echo 'Push project '.$projectId."\n";
         $maps = ProductMapProjects::where('project_id', $projectId)->where('synced', false)->limit(3000)->get();
+		
         if (!$maps) {
             echo 'Het map roi' . "\n";
             return;
@@ -90,6 +91,14 @@ class PushToGMC implements ShouldQueue
                 return Command::SUCCESS;
             }
 
+			if ($rawProduct->isWooProduct) {
+				$cloneRawProduct = clone $rawProduct;
+				if (empty($rawProduct->variants)) {
+					$myVariants = array();
+					$myVariants[0] = $cloneRawProduct;
+					$rawProduct->variants = $myVariants;
+				}
+			}
             if (!$rawProduct->variants) {
                 continue;
             }
@@ -199,12 +208,6 @@ class PushToGMC implements ShouldQueue
                 }
             }
 
-            $cloneRawProduct = clone $rawProduct;
-            if (empty($rawProduct->variants)) {
-                $rawProduct->variants = array();
-                $rawProduct->variants[0] = $cloneRawProduct;
-            }
-
             foreach ($rawProduct->variants as $variant) {
                 $variant = (object)$variant;
                 $inBlackList = VariantBlacklist::where('variant_id', $variant->id)->first();
@@ -301,9 +304,16 @@ class PushToGMC implements ShouldQueue
                 $gmcData->gender($gender);
                 $gmcData->adult($adult);
                 if ($rawProduct->isWooProduct) {
+					$imageLink = $variant->image['src'];
+					if (!$imageLink) {
+						$imageLink = $variant->images[0]['src'];
+						if (!$imageLink) {
+							continue;
+						}
+					}
                     $gmcData->description($rawProduct->description);
                     $gmcData->link($variant->permalink);
-                    $gmcData->image($variant->image['src']);
+                    $gmcData->image($imageLink);
                     // Tìm Gtin, mpn
                     foreach ($rawProduct->meta_data as $meta_datum) {
                         if ($meta_datum['key'] == '_wpsso_product_gtin' && !empty($meta_datum['value'])) {
@@ -402,7 +412,7 @@ class PushToGMC implements ShouldQueue
                 }
                 $project->save();
                 PushSingleVariationToGMC::dispatch($shop, $gmcData, $map)->onQueue('gmc');
-                //echo 'Add job PushSingleVariationToGMC cho id'.$variant->id."\n";
+                echo 'Add job PushSingleVariationToGMC cho id'.$variant->id."\n";
                 //echo $cou . "\n";
             }
         }
