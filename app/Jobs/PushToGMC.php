@@ -54,8 +54,8 @@ class PushToGMC implements ShouldQueue
         echo 'Push project '.$projectId."\n";
         $maps = ProductMapProjects::where('project_id', $projectId)->where('synced', false)->limit(3000)->get();
 
-        $projectId = '6249417b51d1847f98434378';
-        $maps = ProductMapProjects::where('project_id', '6249417b51d1847f98434378')->get();
+        //$projectId = '6249417b51d1847f98434378';
+        //$maps = ProductMapProjects::where('project_id', '6249417b51d1847f98434378')->get();
         echo 'Push project '.$projectId."\n";
         if (!$maps || count($maps) == 0) {
             echo 'Het map roi' . "\n";
