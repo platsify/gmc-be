@@ -97,8 +97,9 @@ class ProductController extends Controller
         }
 
         $ids = preg_split('/\r\n|\r|\n/', $request->ids);
+        $addToBlacklist = (bool)$request->add_to_blacklist;
         foreach ($ids as $id) {
-            DeleteSingleProduct::dispatch($shop, $id);
+            DeleteSingleProduct::dispatch($shop, $id, $addToBlacklist);
         }
         return response()->json(['status' => 'success', 'message' => 'Products will be deleted in 5 minutes', 'data' => '']);
     }

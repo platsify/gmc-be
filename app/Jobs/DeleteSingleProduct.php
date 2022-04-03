@@ -21,15 +21,17 @@ class DeleteSingleProduct implements ShouldQueue
 
     private $shop;
     private $variant_id;
+    private $add_to_blacklist;
     /**
      * Create a new job instance.
      *
      * @return void
      */
-    public function __construct($shop, $variant_id)
+    public function __construct($shop, $variant_id, $add_to_blacklist = false)
     {
         $this->shop = $shop;
         $this->variant_id = $variant_id;
+        $this->add_to_blacklist = $add_to_blacklist;
     }
 
     /**
@@ -39,9 +41,11 @@ class DeleteSingleProduct implements ShouldQueue
      */
     public function handle()
     {
-        $variantBlacklist = new VariantBlacklist();
-        $variantBlacklist->variant_id = $this->variant_id;
-        $variantBlacklist->save();
+        if ($this->add_to_blacklist) {
+            $variantBlacklist = new VariantBlacklist();
+            $variantBlacklist->variant_id = $this->variant_id;
+            $variantBlacklist->save();
+        }
 
         $gmcData = new Product();
         $gmcData->channel('online');
