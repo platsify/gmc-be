@@ -10,6 +10,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use MOIREI\GoogleMerchantApi\Facades\ProductApi;
 use mysql_xdevapi\Exception;
+use Illuminate\Support\Facades\Log;
 
 class PushSingleVariationToGMC implements ShouldQueue
 {
@@ -47,10 +48,10 @@ class PushSingleVariationToGMC implements ShouldQueue
 			$this->map->save();
            echo "Done \n";
         })->otherwise(function($response){
-           echo "otherwise \n";
+            Log::error($response);
             throw new Exception($response);
         })->catch(function($e){
-            echo "Catch ".$e->getMessage() ."\n";
+            Log::error($e->getMessage());
             throw new Exception($e);
         });
 

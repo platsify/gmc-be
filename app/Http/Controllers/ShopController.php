@@ -7,6 +7,11 @@ use App\Jobs\DeleteSingleProduct;
 use App\Jobs\SyncShopbase;
 use App\Models\Project;
 use App\Models\Shop;
+use App\Models\Product;
+use App\Models\RawProduct;
+use App\Models\Category;
+use App\Models\ProductMapCategory;
+use App\Models\ProductMapProjects;
 use App\Repositories\Product\ProductRepositoryInterface;
 use App\Repositories\RawProduct\RawProductRepositoryInterface;
 use Auth;
@@ -201,8 +206,22 @@ class ShopController extends Controller
     {
         if ($this->shopRepository->delete($id)) {
             // Xóa hết product, raw product
-            $this->productRepository->deleteManyBySpecificField('shop_id', $id);
-            $this->rawProductRepository->deleteManyBySpecificField('shop_id', $id);
+            Product::where('shop_id', (string)$id)->delete();
+            RawProduct::where('shop_id', (string)$id)->delete();
+            $categories = Category::where('shop_id', (string)$id)->get();
+            if ($categories) {
+                foreach($categories as $category) {
+                    ProductMapCategory::where('category_id', (string)$category->_id)->delete();
+                }
+                $category->delete();
+            }
+            $projects = Project::where('shop_id', (string)$id)->get();
+           if ($projects) {
+               foreach($projects as $project) {
+                   ProductMapProjects::where('project_id', (string)$project->_id)->delete();
+               }
+               $project->delete();
+           }
 
             return response()->json([
                 'status' => 'success',

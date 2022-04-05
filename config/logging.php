@@ -59,7 +59,13 @@ return [
             'path' => storage_path('logs/laravel.log'),
             'level' => env('LOG_LEVEL', 'debug'),
         ],
-
+        'telegram' => [
+            'driver' => 'custom',
+            'via'    => Logger\TelegramLogger::class,
+            'level'  => 'debug',
+                        'chat_id' => env('TELEGRAM_CHAT_ID'),
+                        'token' => env('TELEGRAM_BOT_TOKEN'),
+        ],
         'daily' => [
             'driver' => 'daily',
             'path' => storage_path('logs/laravel.log'),

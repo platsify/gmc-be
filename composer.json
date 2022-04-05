@@ -10,6 +10,7 @@
         "ext-json": "*",
         "automattic/woocommerce": "^3.0",
         "fruitcake/laravel-cors": "^2.0",
+        "grkamil/laravel-telegram-logging": "^1.7",
         "guzzlehttp/guzzle": "^7.0.1",
         "jenssegers/mongodb": "^3.8",
         "laravel/framework": "^8.65",

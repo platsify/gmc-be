@@ -19,6 +19,7 @@ use Illuminate\Queue\SerializesModels;
 use MOIREI\GoogleMerchantApi\Contents\Product\Product;
 use MOIREI\GoogleMerchantApi\Contents\Product\ProductShipping;
 use MOIREI\GoogleMerchantApi\Facades\ProductApi;
+use Illuminate\Support\Facades\Log;
 
 class PushToGMC implements ShouldQueue
 {
@@ -223,6 +224,7 @@ class PushToGMC implements ShouldQueue
                 }
             }
 
+            $map->push_variant_count = 0;
             foreach ($rawProduct->variants as $variant) {
                 try {
                     // Map vào GMC
@@ -515,11 +517,14 @@ class PushToGMC implements ShouldQueue
                     $project->save();
                     PushSingleVariationToGMC::dispatch($shop, $gmcData, $map)->onQueue('gmc');
                     echo 'Add job PushSingleVariationToGMC cho id ' . $variant->id . "\n";
+                    $map->push_variant_count ++;
                     //echo $cou . "\n";
                 } catch (\Exception $e) {
+                    Log::error('Product: '.$variant->system_product_id . ' -> variant: '. $variant->variant_id . ': '.$e->getMessage());
                     echo $e->getMessage()."\n";
                 }
             }
+             $map->save();
         }
         return Command::SUCCESS;
     }
