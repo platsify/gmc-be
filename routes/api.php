@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CustomFieldController;
+use App\Http\Controllers\OptionController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ShopController;
@@ -44,3 +45,6 @@ Route::get('custom-field/by-project/{shopId}', [CustomFieldController::class, 'g
 Route::apiResource('custom-field', CustomFieldController::class);
 
 Route::get('shop/sync_now/{shopId}', [ShopController::class, 'syncNow']);
+
+// Admin options
+Route::apiResource('options', OptionController::class);

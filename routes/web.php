@@ -18,4 +18,9 @@ Route::get('/', function () {
 });
 
 Route::get('test', function () {
+    $test = new \App\Models\Option();
+    $test->name = 'high_priority_project';
+    $test->value = 'gj39hg04hg05hg04hg4h';
+    $test->save();
+    return response()->json($test);
 });
