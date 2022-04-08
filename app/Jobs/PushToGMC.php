@@ -7,6 +7,7 @@ use App\Models\ProductMapProjects;
 use App\Models\Project;
 use App\Models\RawProduct;
 use App\Models\Shop;
+use App\Models\Option;
 use App\Models\VariantBlacklist;
 use App\Models\VariantWhitelist;
 use Illuminate\Bus\Queueable;
@@ -43,25 +44,40 @@ class PushToGMC implements ShouldQueue
      */
     public function handle()
     {
-        // Comment tạm 2512
-        //$activeProjects = ['619f3f968e5de9606219e65c', '619f3ea5ff798b78771ed965'];
-        $activeProjects = Project::where('active', true)->get()->pluck('_id')->toArray();
-        if (!$activeProjects || count($activeProjects) == 0) {
-            return;
+        $maps = [];
+
+        // ưu tiên project do admin chỉ định
+        $optionProject = Option::where('name', 'high_priority_project')->first();
+        if ($optionProject) {
+            $projectId = $optionProject->value;
+            if (!empty($projectId)) {
+                $maps = ProductMapProjects::where('project_id', $projectId)->where('synced', false)->where('push_variant_count', '!=', (int)0)->limit(3000)->get();
+                if ($maps && count($maps) > 0) {
+                    echo 'Đang push project ưu tiên project ' . $projectId . "\n";
+                }
+            }
         }
 
-        shuffle($activeProjects);
-        $projectId = $activeProjects[0];
-        echo 'Push project '.$projectId."\n";
-        $maps = ProductMapProjects::where('project_id', $projectId)->where('synced', false)->limit(3000)->get();
 
-        //$projectId = '6249417b51d1847f98434378';
-        //$maps = ProductMapProjects::where('project_id', '6249417b51d1847f98434378')->get();
-        echo 'Push project '.$projectId."\n";
-        if (!$maps || count($maps) == 0) {
-            echo 'Het map roi' . "\n";
-            return;
+        // Nhưng nếu project đấy hết map rồi thì sẽ random
+        if (!$maps) {
+            $activeProjects = Project::where('active', true)->get()->pluck('_id')->toArray();
+            if (!$activeProjects || count($activeProjects) == 0) {
+                echo 'Het projects';
+                return;
+            }
+            shuffle($activeProjects);
+            $projectId = $activeProjects[0];
+            echo 'Push project ' . $projectId . "\n";
+            $maps = ProductMapProjects::where('project_id', $projectId)->where('synced', false)->where('push_variant_count', '!=', (int)0)->limit(3000)->get();
+            //$projectId = '6249417b51d1847f98434378';
+            //$maps = ProductMapProjects::where('project_id', '6249417b51d1847f98434378')->get();
+            echo 'Push project ' . $projectId . "\n";
+            if (!$maps || count($maps) == 0) {
+                echo 'Het map roi' . "\n";
+            }
         }
+
         echo 'Maps co tong so:'. count($maps). "\n";
         foreach ($maps as $map) {
             $project = Project::where('_id', $map->project_id)->first();
