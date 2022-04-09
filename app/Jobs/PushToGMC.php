@@ -397,13 +397,14 @@ class PushToGMC implements ShouldQueue
                         }
                     }
                     if ($isQuilt) {
-                        if ($size != 'Throw') {
+                        if (mb_strtolower($size) != 'throw') {
                             echo 'Thuoc muc Quilt nhung size = ' . $size . " nen bo qua \n";
                             continue;
                         }
                     }
 
-                    // Tìm xem SP này có thuộc collection là bedding ko,  nếu có thì chỉ lấy Quilt Cover + 2 Pillow Cases
+                    // Tìm xem SP này có thuộc collection là bedding ko,  nếu có thì chỉ lấy Quilt Cover + 2 Pillow Cases' hoặc 'Duvet Cover + 2 Pillow Cases'
+					// Không phân biệt hoa thường
                     $isBeddingCollection = false;
                     foreach ($rawProduct->productMapCategories as $productCategory) {
                         if ($productCategory->category && strpos(mb_strtolower($productCategory->category->name), 'bedding') !== false) {
@@ -412,7 +413,7 @@ class PushToGMC implements ShouldQueue
                         }
                     }
                     if ($isBeddingCollection) {
-                        if ($type != 'Quilt Cover + 2 Pillow Cases') {
+                        if (mb_strtolower($type) != 'quilt cover + 2 pillow cases' || mb_strtolower($type) != 'duvet cover + 2 pillow cases') {
                             echo 'Thuoc muc bedding nhung $type = ' . $type . " nen bo qua \n";
                             continue;
                         }
@@ -427,7 +428,7 @@ class PushToGMC implements ShouldQueue
                         }
                     }
                     if ($isHoodieCollection) {
-                        if ($type != 'AOP Hoodie') {
+                        if (mb_strtolower($type) != 'aop hoodie') {
                             echo 'Thuoc muc hoodie nhung $type = ' . $type . " nen bo qua \n";
                             continue;
                         }
@@ -435,7 +436,7 @@ class PushToGMC implements ShouldQueue
 
                     // Loại bỏ các sản phẩm có Size nhưng ko phải 'S', 'Throw', 'Tween', 'Twin'
                     echo $rawProduct->options[$sizeOption - 1]['name'] . ' = ' . $size . "\n";
-                    if ($sizeOption != 99999 && !in_array($size, ['S', 'Throw', 'Tween', 'Twin'])) {
+                    if ($sizeOption != 99999 && !in_array(mb_strtolower($size), ['s', 'throw', 'tween', 'twin'])) {
                         echo 'Size = ' . $size . " khong thuoc danh sach cho phep ['S', 'Throw', 'Tween', 'Twin'] nen bo qua \n";
                         echo 'Bỏ qua' . "\n";
                         continue;
