@@ -141,7 +141,7 @@ class PushToGMC implements ShouldQueue
             $adult = false;
             $gender = 'unisex';
             $ageGroup = 'adult';
-            $color = 'multicolor';
+            $color = '';
             $size = 'Free size';
             $brand = $shop->name;
             $type = '';
@@ -319,18 +319,19 @@ class PushToGMC implements ShouldQueue
                             }
                         }
 
-                        if (!empty($size)) {
-                            $buildTitle .= ' Size: ' . $size;
-                        }
-                        if (!empty($color)) {
-                            $buildTitle .= ' Color: ' . $color;
-                        }
+						$extendTitles = [];
                         if (!empty($type)) {
-                            $buildTitle .= ' Type: ' . $type;
+                           $extendTitles[] = $type;
                         }
-                        if (!empty($brand)) {
-                            $buildTitle .= ' Brand: ' . $brand;
+						if (!empty($color)) {
+                            $extendTitles[] = $color;
                         }
+						if (!empty($size)) {
+                            $extendTitles[] = $size;
+                        }
+						if (!empty($extendTitles)) {
+							$buildTitle .= ' - '.implode(' / ', $extendTitles);
+						}
 
 
                         $gmcData->offerId($variant->sku);
@@ -450,7 +451,7 @@ class PushToGMC implements ShouldQueue
                     }
 
                     $gmcData->ageGroup($ageGroup);
-                    $gmcData->color($color);
+                    $gmcData->color(!empty($color) ? $color : 'multicolor');
                     $gmcData->sizes($size);
                     $gmcData->sizeType($sizeType);
                     $gmcData->sizeSystem($sizeSystem);
@@ -534,6 +535,7 @@ class PushToGMC implements ShouldQueue
                     $project->save();
                     PushSingleVariationToGMC::dispatch($shop, $gmcData, $map)->onQueue('gmc');
                     echo 'Add job PushSingleVariationToGMC cho id ' . $variant->id . "\n";
+					//exit();
                     $map->push_variant_count ++;
                     //echo $cou . "\n";
                 } catch (\Exception $e) {
@@ -541,7 +543,7 @@ class PushToGMC implements ShouldQueue
                     echo $e->getMessage()."\n";
                 }
             }
-             $map->save();
+            $map->save();
         }
         return Command::SUCCESS;
     }

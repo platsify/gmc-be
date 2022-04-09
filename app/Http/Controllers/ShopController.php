@@ -212,16 +212,17 @@ class ShopController extends Controller
             if ($categories) {
                 foreach($categories as $category) {
                     ProductMapCategory::where('category_id', (string)$category->_id)->delete();
-                }
-                $category->delete();
+					$category->delete();
+                }                
             }
+			
             $projects = Project::where('shop_id', (string)$id)->get();
-           if ($projects) {
-               foreach($projects as $project) {
-                   ProductMapProjects::where('project_id', (string)$project->_id)->delete();
-               }
-               $project->delete();
-           }
+			if ($projects) {
+			   foreach($projects as $project) {
+				   ProductMapProjects::where('project_id', (string)$project->_id)->delete();
+				   $project->delete();
+			   }
+			}
 
             return response()->json([
                 'status' => 'success',
