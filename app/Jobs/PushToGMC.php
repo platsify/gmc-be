@@ -414,7 +414,7 @@ class PushToGMC implements ShouldQueue
                         }
                     }
                     if ($isBeddingCollection) {
-                        if (mb_strtolower($type) != 'quilt cover + 2 pillow cases' || mb_strtolower($type) != 'duvet cover + 2 pillow cases') {
+                        if (mb_strtolower($type) != 'quilt cover + 2 pillow cases' && mb_strtolower($type) != 'duvet cover + 2 pillow cases') {
                             echo 'Thuoc muc bedding nhung $type = ' . $type . " nen bo qua \n";
                             continue;
                         }
