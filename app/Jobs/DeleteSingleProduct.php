@@ -43,6 +43,7 @@ class DeleteSingleProduct implements ShouldQueue
     {
         if ($this->add_to_blacklist) {
             $variantBlacklist = new VariantBlacklist();
+			$variantBlacklist->gmc_id = $this->shop->gmc_id;
             $variantBlacklist->variant_id = $this->variant_id;
             $variantBlacklist->save();
         }

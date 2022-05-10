@@ -25,6 +25,7 @@ class SyncWooByPage implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public $timeout = 0;
+	public $tries = 2;
 
     private $page, $shop, $shopId, $categoryRepository;
     private $shopCategories;
@@ -80,7 +81,7 @@ class SyncWooByPage implements ShouldQueue
     {
         //echo 'Dang chay page ' .$this->page."\n";
         try {
-            $wooProducts = $this->woo->get('products', ['status' => 'publish', 'page' => $this->page, 'per_page' => '1']);
+            $wooProducts = $this->woo->get('products', ['status' => 'publish', 'page' => $this->page, 'per_page' => '10']);
         } catch (\Exception $e) {
             throw new \Exception($e);
         }
@@ -100,13 +101,22 @@ class SyncWooByPage implements ShouldQueue
             $wooProduct->original_id = $wooProduct->id;
             $basicProductData = $this->mapSbToProduct($wooProduct, $this->shop);
 
-            $variants = $this->woo->get('products/' . $id . '/variations');
-
-            if ($variants) {
-                foreach ($variants as &$variant) {
+			$allVariants = array();
+			$variantPage = 0;
+			do {
+				$variantPage ++;
+				$variants = $this->woo->get('products/' . $id . '/variations?per_page=100&page='.$variantPage);
+				$allVariants = array_merge($allVariants, $variants);
+				if (empty($variants)) {
+					break;
+				}
+			} while(true);
+			
+            if (!empty($allVariants)) {
+                foreach ($allVariants as &$variant) {
                     $variant->id =  $this->shop->id . '__' . $variant->id;
                 }
-                $wooProduct->variants = $variants;
+                $wooProduct->variants = $allVariants;
             }
             // Ghi đè một số field nếu sản phẩm này đã tồn tại (có thể sẽ ko còn dùng default value nên cần ghi đè)
             $existingProduct = $productRepository->findBySpecificField('original_id', $basicProductData['original_id']);

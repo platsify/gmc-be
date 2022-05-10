@@ -52,9 +52,12 @@ class PushToGMC implements ShouldQueue
             $projectId = $optionProject->value;
             if (!empty($projectId)) {
                 $maps = ProductMapProjects::where('project_id', $projectId)->where('synced', false)->where('push_variant_count', '!=', (int)0)->limit(3000)->get();
+				//$maps = ProductMapProjects::where('product_id', '6250747df1266e052713df74')->limit(3000)->get();
                 if ($maps && count($maps) > 0) {
                     echo 'Đang push project ưu tiên project ' . $projectId . "\n";
-                }
+                } else {
+					echo "Tìm thấy project ưu tiên nhưng ko có map phù hợp \n";
+				}
             }
         }
 
@@ -210,7 +213,7 @@ class PushToGMC implements ShouldQueue
             // Tìm số thự tự của color và size trong options
             $colorOption = 99999;
             $sizeOption = 99999;
-            $typeOption = 9999;
+            $typeOption = 99999;
 
 
             $options = $rawProduct->options;
@@ -241,13 +244,15 @@ class PushToGMC implements ShouldQueue
             }
 
             $map->push_variant_count = 0;
-            foreach ($rawProduct->variants as $variant) {
+            foreach ($rawProduct->variants as $d => $variant) {
+				echo 'Variant so '.$d."\n";
                 try {
                     // Map vào GMC
                     $gmcData = new Product();
 
                     $variant = (object)$variant;
-                    $inBlackList = VariantBlacklist::where('variant_id', $variant->id)->first();
+                    //$inBlackList = VariantBlacklist::where('variant_id', $variant->id)->where('gmc_id', $shop->gmc_id)->first();
+					$inBlackList = VariantBlacklist::where('variant_id', $variant->id)->first();
                     if ($inBlackList) {
                         echo $variant->id . " nam trong blacklist\n";
                         continue;
@@ -257,7 +262,7 @@ class PushToGMC implements ShouldQueue
                             echo "SKU rong " . $rawProduct->system_product_id . "\n";
                             continue;
                         }
-                        $inBlackList = VariantBlacklist::where('variant_id', $variant->sku)->first();
+                        $inBlackList = VariantBlacklist::where('variant_id', $variant->sku)->where('gmc_id', $shop->gmc_id)->first();
                         if ($inBlackList) {
                             echo $variant->sku . " co SKU nam trong blacklist\n";
                             continue;
@@ -398,7 +403,7 @@ class PushToGMC implements ShouldQueue
                         }
                     }
                     if ($isQuilt) {
-                        if (mb_strtolower($size) != 'throw') {
+                        if ($sizeOption != 99999 && mb_strtolower($size) != 'throw') {
                             echo 'Thuoc muc Quilt nhung size = ' . $size . " nen bo qua \n";
                             continue;
                         }
@@ -414,7 +419,7 @@ class PushToGMC implements ShouldQueue
                         }
                     }
                     if ($isBeddingCollection) {
-                        if (mb_strtolower($type) != 'quilt cover + 2 pillow cases' && mb_strtolower($type) != 'duvet cover + 2 pillow cases') {
+                        if ($typeOption != 99999 && mb_strtolower($type) != 'quilt cover + 2 pillow cases' && mb_strtolower($type) != 'duvet cover + 2 pillow cases') {
                             echo 'Thuoc muc bedding nhung $type = ' . $type . " nen bo qua \n";
                             continue;
                         }
@@ -429,19 +434,22 @@ class PushToGMC implements ShouldQueue
                         }
                     }
                     if ($isHoodieCollection) {
-                        if (mb_strtolower($type) != 'aop hoodie') {
+                        if ($typeOption != 99999 && mb_strtolower($type) != 'aop hoodie') {
                             echo 'Thuoc muc hoodie nhung $type = ' . $type . " nen bo qua \n";
                             continue;
                         }
+						else {
+							echo 'Thuoc muc hoodie va $type = ' . $type . " dc chap nhan \n";
+						}
                     }
 
                     // Loại bỏ các sản phẩm có Size nhưng ko phải 'S', 'Throw', 'Tween', 'Twin'
                     echo $rawProduct->options[$sizeOption - 1]['name'] . ' = ' . $size . "\n";
                     if ($sizeOption != 99999 && !in_array(mb_strtolower($size), ['s', 'throw', 'tween', 'twin'])) {
-                        echo 'Size = ' . $size . " khong thuoc danh sach cho phep ['S', 'Throw', 'Tween', 'Twin'] nen bo qua \n";
-                        echo 'Bỏ qua' . "\n";
+                        echo 'Size = ' . $size . " khong thuoc danh sach cho phep ['S', 'Throw', 'Tween', 'Twin'] nen bo qaaua \n";
                         continue;
                     }
+					echo 'SSSSSSize = ' . $size . " =====\n";
 
 
                     //  Điều kiện lọc
@@ -539,8 +547,7 @@ class PushToGMC implements ShouldQueue
                     $map->push_variant_count ++;
                     //echo $cou . "\n";
                 } catch (\Exception $e) {
-                    Log::error('Product: '.$variant->system_product_id . ' -> variant: '. $variant->variant_id . ': '.$e->getMessage());
-                    echo $e->getMessage()."\n";
+                    Log::error('Product: '.$map->product_id .': '.$e->getMessage().'. LINE: '. $e->getLine());
                 }
             }
             $map->save();

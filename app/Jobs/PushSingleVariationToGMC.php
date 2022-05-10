@@ -16,6 +16,8 @@ class PushSingleVariationToGMC implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
+	public $tries = 2;
+
     private $shop;
     private $gmcData;
 	private $map;

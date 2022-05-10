@@ -23,6 +23,7 @@ class SyncShopebaseByCategory implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
 	public $timeout = 0;
+	public $tries = 2;
 
     private $category, $lastSync, $shop, $shopId, $shopbase, $categoryRepository;
     /**
