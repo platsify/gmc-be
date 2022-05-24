@@ -93,7 +93,7 @@ class SyncWoo implements ShouldQueue
     }
 
     public function syncProducts() {
-        for ($i = 1; $i < 6; $i++) {
+        for ($i = 1; $i < 11; $i++) {
             SyncWooByPage::dispatch($i, $this->shop, $this->shopId, $this->woo);
         }
     }
@@ -112,8 +112,9 @@ class SyncWoo implements ShouldQueue
     {
         $categories = array();
         $items = array();
+        $page = 1;
         do {
-            $items = $this->woo->get('products/categories', ['page' => 1, 'per_page' => 100]);
+            $items = $this->woo->get('products/categories', ['page' => $page, 'per_page' => 100]);
             if ($items && !empty($items)) {
                 foreach ($items as $collection) {
                     $collection = (object)$collection;
@@ -130,6 +131,7 @@ class SyncWoo implements ShouldQueue
             foreach ($categories as $category) {
                 $this->categoryRepository->upsertByOriginalId($category['original_id'], $category);
             }
-        } while(empty($items));
+            $page++;
+        } while(!empty($items));
     }
 }

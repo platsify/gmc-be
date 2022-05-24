@@ -338,9 +338,19 @@ class PushToGMC implements ShouldQueue
 							$buildTitle .= ' - '.implode(' / ', $extendTitles);
 						}
 
+						// với các site trên WooCommerce
+                        //hiện tại đang lấy sku để gửi lên trường id và item-group-id trên gmc
+                        //chỉnh sửa:
+                        //1- lấy trường id của sản phẩm để gửi lên id và item_group_id trên gmc
+                        //2- riêng site kniben thì để như hiện tại, lấy trường sku để gửi lên trường id và item_group_id
+						if ($rawProduct->shop_id == '62511c54a1d1b15a6d2061da') {
+                            $gmcData->offerId($variant->sku);
+                            $gmcData->itemGroupId($variant->sku);
+                        } else {
+                            $gmcData->offerId($variant->id);
+                            $gmcData->itemGroupId($variant->id);
+                        }
 
-                        $gmcData->offerId($variant->sku);
-                        $gmcData->itemGroupId($variant->sku);
                         $imageLink = $variant->image['src'];
                         if (!$imageLink) {
                             $imageLink = $variant->images[0]['src'];
