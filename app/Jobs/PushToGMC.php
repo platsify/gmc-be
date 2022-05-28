@@ -487,7 +487,9 @@ class PushToGMC implements ShouldQueue
                     $gmcData->identifierExists($identifierExists);
                     $gmcData->gender($gender);
                     $gmcData->adult($adult);
-                    $gmcData->brand($brand);
+                    if (empty($project->include_brand) || $project->include_brand) {
+                        $gmcData->brand($brand);
+                    }
                     //$gmcData->id($gmcData->channel . ':'.$gmcData->contentLanguage.':'.$gmcData->targetCountry.':'.$gmcData->offerId);
                     $gmcData->title(mb_substr($buildTitle, 0, 150));
                     $gmcData->link = str_replace('/products/products/', '/products/', $gmcData->link);
@@ -505,33 +507,33 @@ class PushToGMC implements ShouldQueue
                     $gmcData->shipping($shipping);
                     $gmcData->taxes(['country' => 'us', 'rate' => 6, 'taxShip' => true]);
                     $gmcData->condition('new');
+                    $gmcData->customLabel0($project->name);
 
                     //$gmcData->customValues(['ships_from_country' => $shipFromCountry]);
-
-                    $countCustomLabel = 0;
-                    foreach ($rawProduct->productMapCategories as $productCategory) {
-                        if ($productCategory->category) {
-                            if ($countCustomLabel == 0) {
-                                $gmcData->customLabel0($productCategory->category->name);
-                            }
-//                            if ($countCustomLabel == 1) {
-//                                $gmcData->customLabel1($productCategory->category->name);
-//                            }
-//                            if ($countCustomLabel == 2) {
-//                                $gmcData->customLabel2($productCategory->category->name);
-//                            }
-//                            if ($countCustomLabel == 3) {
-//                                $gmcData->customLabel3($productCategory->category->name);
-//                            }
-//                            if ($countCustomLabel == 4) {
-//                                $gmcData->customLabel4($productCategory->category->name);
-//                            }
-                            $countCustomLabel++;
-                            if ($countCustomLabel == 4) {
-                                break;
-                            }
-                        }
-                    }
+//                    $countCustomLabel = 0;
+//                    foreach ($rawProduct->productMapCategories as $productCategory) {
+////                        if ($productCategory->category) {
+////                            if ($countCustomLabel == 0) {
+////                                $gmcData->customLabel0($productCategory->category->name);
+////                            }
+////                            if ($countCustomLabel == 1) {
+////                                $gmcData->customLabel1($productCategory->category->name);
+////                            }
+////                            if ($countCustomLabel == 2) {
+////                                $gmcData->customLabel2($productCategory->category->name);
+////                            }
+////                            if ($countCustomLabel == 3) {
+////                                $gmcData->customLabel3($productCategory->category->name);
+////                            }
+////                            if ($countCustomLabel == 4) {
+////                                $gmcData->customLabel4($productCategory->category->name);
+////                            }
+////                            $countCustomLabel++;
+////                            if ($countCustomLabel == 4) {
+////                                break;
+////                            }
+//                        //}
+//                    }
 
                     if (!$project->todaySync) {
                         $project->todaySync = str_pad(date("d", time()), 2, '0', STR_PAD_LEFT) . '_' . str_pad(0, 5, '0', STR_PAD_LEFT);
