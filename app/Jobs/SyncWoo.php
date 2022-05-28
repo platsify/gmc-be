@@ -9,19 +9,12 @@ use App\Repositories\Category\CategoryRepositoryInterface;
 use App\Repositories\Product\ProductRepositoryInterface;
 use App\Repositories\ProductMapCategory\ProductMapCategoryRepositoryInterface;
 use App\Repositories\RawProduct\RawProductRepositoryInterface;
-use App\Services\Shopbase;
-use Carbon\Carbon;
+use App\Services\WooGApi;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Config;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Arr;
-use Automattic\WooCommerce\Client;
 
 class SyncWoo implements ShouldQueue
 {
@@ -33,7 +26,7 @@ class SyncWoo implements ShouldQueue
     private $lastSync;
     private $shopId;
 
-    /** @var Client $object */
+    /** @var WooGApi $object */
     private $woo;
 
     /** @var Shop $object */
@@ -99,39 +92,30 @@ class SyncWoo implements ShouldQueue
     }
 
     public function initWooClient() {
-        $this->woo = new Client(
+        $this->woo = new WooGApi(
             $this->shop->public_url,
-            $this->shop->api_key,
-            $this->shop->api_secret,
-            [
-                'version' => 'wc/v3',
-            ]
+            $this->shop->api_key
         );
     }
     public function syncCategories()
     {
         $categories = array();
-        $items = array();
-        $page = 1;
-        do {
-            $items = $this->woo->get('products/categories', ['page' => $page, 'per_page' => 100]);
-            if ($items && !empty($items)) {
-                foreach ($items as $collection) {
-                    $collection = (object)$collection;
-                    $categories[] = array(
-                        'shop_id' => $this->shopId,
-                        'active' => true,
-                        'original_id' => $this->shopId . '__' . $collection->id,
-                        'name' => $collection->name
-                    );
-                }
+        $items = $this->woo->getRequest(['r' => 'categories']);
+        if (!empty($items)) {
+            foreach ($items as $collection) {
+                $collection = (object)$collection;
+                $categories[] = array(
+                    'shop_id' => $this->shopId,
+                    'active' => true,
+                    'original_id' => $this->shopId . '__' . $collection->id,
+                    'name' => $collection->name
+                );
             }
+        }
 
-            // Upsert category
-            foreach ($categories as $category) {
-                $this->categoryRepository->upsertByOriginalId($category['original_id'], $category);
-            }
-            $page++;
-        } while(!empty($items));
+        // Upsert category
+        foreach ($categories as $category) {
+            $this->categoryRepository->upsertByOriginalId($category['original_id'], $category);
+        }
     }
 }

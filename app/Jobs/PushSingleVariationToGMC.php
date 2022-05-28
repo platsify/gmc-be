@@ -48,7 +48,7 @@ class PushSingleVariationToGMC implements ShouldQueue
         ])->insert($this->gmcData)->then(function($response){
 			$this->map->synced = true;
 			$this->map->save();
-           echo "Done \n";
+           echo "Done ". $this->gmcData->title."\n";
         })->otherwise(function($response){
             Log::error($response);
             throw new Exception($response);

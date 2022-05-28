@@ -9,16 +9,13 @@ use App\Repositories\Category\CategoryRepositoryInterface;
 use App\Repositories\Product\ProductRepositoryInterface;
 use App\Repositories\ProductMapCategory\ProductMapCategoryRepositoryInterface;
 use App\Repositories\RawProduct\RawProductRepositoryInterface;
-use Automattic\WooCommerce\Client;
-use Carbon\Carbon;
-use Doctrine\DBAL\Driver\Exception;
+use App\Services\WooGApi;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Log;
+
 
 class SyncWooByPage implements ShouldQueue
 {
@@ -30,7 +27,7 @@ class SyncWooByPage implements ShouldQueue
     private $page, $shop, $shopId, $categoryRepository;
     private $shopCategories;
 
-     /** @var Client $object */
+     /** @var WooGApi $object */
     private $woo;
     /**
      * Create a new job instance.
@@ -81,7 +78,7 @@ class SyncWooByPage implements ShouldQueue
     {
         //echo 'Dang chay page ' .$this->page."\n";
         try {
-            $wooProducts = $this->woo->get('products', ['status' => 'publish', 'page' => $this->page, 'per_page' => '10']);
+            $wooProducts = $this->woo->getRequest(['r' => 'products', 'page' => $this->page, 'per_page' => '10']);
         } catch (\Exception $e) {
             throw new \Exception($e);
         }
@@ -102,16 +99,8 @@ class SyncWooByPage implements ShouldQueue
             $basicProductData = $this->mapSbToProduct($wooProduct, $this->shop);
 
 			$allVariants = array();
-			$variantPage = 0;
-			do {
-				$variantPage ++;
-				$variants = $this->woo->get('products/' . $id . '/variations?per_page=100&page='.$variantPage);
-				$allVariants = array_merge($allVariants, $variants);
-				if (empty($variants)) {
-					break;
-				}
-			} while(true);
-			
+            $variants = $this->woo->getRequest(['r' => 'variations', 'product_id' => $id]);
+            $allVariants = array_merge($allVariants, $variants);
             if (!empty($allVariants)) {
                 foreach ($allVariants as &$variant) {
                     $variant->id =  $this->shop->id . '__' . $variant->id;

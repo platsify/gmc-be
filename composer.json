@@ -5,7 +5,7 @@
     "keywords": ["framework", "laravel"],
     "license": "MIT",
     "require": {
-        "php": "^7.3|^8.0",
+        "php": "^7.4",
         "ext-curl": "*",
         "ext-json": "*",
         "automattic/woocommerce": "^3.0",
@@ -14,7 +14,6 @@
         "guzzlehttp/guzzle": "^7.0.1",
         "jenssegers/mongodb": "^3.8",
         "laravel/framework": "^8.65",
-        "laravel/horizon": "^5.7",
         "laravel/sanctum": "^2.11",
         "laravel/tinker": "^2.5",
         "moirei/laravel-google-merchant-api": "^1.1",
@@ -67,7 +66,10 @@
     "config": {
         "optimize-autoloader": true,
         "preferred-install": "dist",
-        "sort-packages": true
+        "sort-packages": true,
+        "platform": {
+            "php": "7.4.29"
+        }
     },
     "minimum-stability": "dev",
     "prefer-stable": true
