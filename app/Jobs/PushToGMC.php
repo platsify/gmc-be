@@ -458,10 +458,10 @@ class PushToGMC implements ShouldQueue
 						}
                     }
 
-                    // Loại bỏ các sản phẩm có Size nhưng ko phải 'S', 'Throw', 'Tween', 'Twin'
+                    // Loại bỏ các sản phẩm có Size nhưng ko phải 'S', 'Throw', 'Tween', 'Twin', '3'
                     echo $rawProduct->options[$sizeOption - 1]['name'] . ' = ' . $size . "\n";
-                    if ($sizeOption != 99999 && !in_array(mb_strtolower($size), ['s', 'throw', 'tween', 'twin'])) {
-                        echo 'Size = ' . $size . " khong thuoc danh sach cho phep ['S', 'Throw', 'Tween', 'Twin'] nen bo qaaua \n";
+                    if ($sizeOption != 99999 && !in_array(mb_strtolower($size), ['s', 'throw', 'tween', 'twin', '3'])) {
+                        echo 'Size = ' . $size . " khong thuoc danh sach cho phep ['S', 'Throw', 'Tween', 'Twin', '3'] nen bo qaaua \n";
                         continue;
                     }
 					echo 'SSSSSSize = ' . $size . " =====\n";
