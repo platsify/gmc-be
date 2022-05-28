@@ -8,17 +8,18 @@
         "php": "^7.4",
         "ext-curl": "*",
         "ext-json": "*",
+        "ext-mbstring": "*",
         "automattic/woocommerce": "^3.0",
         "fruitcake/laravel-cors": "^2.0",
         "grkamil/laravel-telegram-logging": "^1.7",
         "guzzlehttp/guzzle": "^7.0.1",
         "jenssegers/mongodb": "^3.8",
         "laravel/framework": "^8.65",
+        "laravel/horizon": "^5.9",
         "laravel/sanctum": "^2.11",
         "laravel/tinker": "^2.5",
         "moirei/laravel-google-merchant-api": "^1.1",
-        "mongodb/mongodb": "^1.10",
-      "ext-mbstring": "*"
+        "mongodb/mongodb": "^1.10"
     },
     "require-dev": {
         "barryvdh/laravel-ide-helper": "^2.10",
