@@ -426,7 +426,6 @@ class PushToGMC implements ShouldQueue
                     }
 
                     // Tìm xem SP này có thuộc collection là bedding ko,  nếu có thì chỉ lấy Quilt Cover + 2 Pillow Cases' hoặc 'Duvet Cover + 2 Pillow Cases'
-					// Không phân biệt hoa thường
                     $isBeddingCollection = false;
                     foreach ($rawProduct->productMapCategories as $productCategory) {
                         if ($productCategory->category && strpos(mb_strtolower($productCategory->category->name), 'bedding') !== false) {
@@ -441,7 +440,7 @@ class PushToGMC implements ShouldQueue
                         }
                     }
 
-                    // Tìm xem SP này có thuộc collection là hoodie ko
+                    // Tìm xem SP này có thuộc collection là hoodie ko, nếu có thì chỉ lấy aop hoodie
                     $isHoodieCollection = false;
                     foreach ($rawProduct->productMapCategories as $productCategory) {
                         if ($productCategory->category && strpos(mb_strtolower($productCategory->category->name), 'hoodie') !== false) {
