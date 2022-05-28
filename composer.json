@@ -18,7 +18,8 @@
         "laravel/sanctum": "^2.11",
         "laravel/tinker": "^2.5",
         "moirei/laravel-google-merchant-api": "^1.1",
-        "mongodb/mongodb": "^1.10"
+        "mongodb/mongodb": "^1.10",
+      "ext-mbstring": "*"
     },
     "require-dev": {
         "barryvdh/laravel-ide-helper": "^2.10",

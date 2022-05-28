@@ -487,7 +487,7 @@ class PushToGMC implements ShouldQueue
                     $gmcData->identifierExists($identifierExists);
                     $gmcData->gender($gender);
                     $gmcData->adult($adult);
-                    if (empty($project->include_brand) || $project->include_brand) {
+                    if ($project->include_brand) {
                         $gmcData->brand($brand);
                     }
                     //$gmcData->id($gmcData->channel . ':'.$gmcData->contentLanguage.':'.$gmcData->targetCountry.':'.$gmcData->offerId);
