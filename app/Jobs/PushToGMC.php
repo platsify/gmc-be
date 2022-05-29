@@ -144,7 +144,7 @@ class PushToGMC implements ShouldQueue
             $adult = false;
             $gender = 'unisex';
             $ageGroup = 'adult';
-            $color = '';
+            $color = 'multicolor';
             $getColorFrom = 'default';
             $size = '';
             $brand = $shop->name;
