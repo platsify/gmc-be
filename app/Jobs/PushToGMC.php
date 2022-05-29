@@ -346,7 +346,7 @@ class PushToGMC implements ShouldQueue
                             $extendTitles[] = $size;
                         }
                         if (!empty($extendTitles)) {
-                            $buildTitle .= ' - ' . implode(' / ', $extendTitles);
+                            $buildTitle .= ', ' . implode(', ', $extendTitles);
                         }
 
                         // với các site trên WooCommerce
@@ -489,7 +489,10 @@ class PushToGMC implements ShouldQueue
                     }
 
                     $gmcData->ageGroup($ageGroup);
-                    $gmcData->color(!empty($color) ? $color : 'multicolor');
+                    if (!empty($color)) {
+                        $gmcData->color($color);
+                    }
+
                     if (!empty($size)) {
                         $gmcData->sizes($size);
                     }
