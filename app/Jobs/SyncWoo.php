@@ -86,7 +86,7 @@ class SyncWoo implements ShouldQueue
     }
 
     public function syncProducts() {
-        for ($i = 1; $i < 11; $i++) {
+        for ($i = 1; $i < 31; $i++) {
             SyncWooByPage::dispatch($i, $this->shop, $this->shopId, $this->woo);
         }
     }

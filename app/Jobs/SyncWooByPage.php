@@ -161,6 +161,6 @@ class SyncWooByPage implements ShouldQueue
         $this->shop->crawled_product = Product::where('shop_id', $this->shopId)->count();
         $this->shop->save();
 
-        SyncWooByPage::dispatch($this->page + 10, $this->shop, $this->shopId, $this->woo);
+        SyncWooByPage::dispatch($this->page + 30, $this->shop, $this->shopId, $this->woo);
     }
 }
