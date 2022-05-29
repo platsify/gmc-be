@@ -145,6 +145,7 @@ class PushToGMC implements ShouldQueue
             $gender = 'unisex';
             $ageGroup = 'adult';
             $color = '';
+            $getColorFrom = 'default';
             $size = '';
             $brand = $shop->name;
             $type = '';
@@ -167,6 +168,7 @@ class PushToGMC implements ShouldQueue
             }
             if (!empty($defaultValues['color'])) {
                 $color = $defaultValues['color'];
+                $getColorFrom = 'project';
             }
             if (!empty($defaultValues['shipping_price'])) {
                 $shippingPrice = $defaultValues['shipping_price'];
@@ -267,14 +269,29 @@ class PushToGMC implements ShouldQueue
                         continue;
                     }
                     if ($rawProduct->isWooProduct) {
-                        if (empty($variant->sku)) {
-                            echo "SKU rong " . $rawProduct->system_product_id . "\n";
-                            continue;
+//                        if (empty($variant->sku)) {
+//                            echo "SKU rong " . $rawProduct->system_product_id . "\n";
+//                            continue;
+//                        }
+                        $idParts = explode('__', $variant->id);
+                        $originalId = null;
+                        if (!empty($idParts)) {
+                            $originalId = $idParts[count($idParts) - 1];
                         }
-                        $inBlackList = VariantBlacklist::where('variant_id', $variant->sku)->where('gmc_id', $shop->gmc_id)->first();
-                        if ($inBlackList) {
-                            echo $variant->sku . " co SKU nam trong blacklist\n";
-                            continue;
+                        if ($originalId) {
+                            $inBlackList = VariantBlacklist::where('variant_id', $originalId)->where('gmc_id', $shop->gmc_id)->first();
+                            if ($inBlackList) {
+                                echo $variant->sku . " co ID nam trong blacklist\n";
+                                continue;
+                            }
+                        }
+
+                        if (!empty($variant->sku)) {
+                            $inBlackList = VariantBlacklist::where('variant_id', $variant->sku)->where('gmc_id', $shop->gmc_id)->first();
+                            if ($inBlackList) {
+                                echo $variant->sku . " co SKU nam trong blacklist\n";
+                                continue;
+                            }
                         }
                     }
 
@@ -294,6 +311,7 @@ class PushToGMC implements ShouldQueue
                             }
                             if (mb_strtolower($attribute->name) == 'color' && count($attribute->options) > 0) {
                                 $color = $attribute->options[0];
+                                $getColorFrom = 'product';
                             }
                             if (mb_strtolower($attribute->name) == 'type' && count($attribute->options) > 0) {
                                 $type = $attribute->options[0];
@@ -320,6 +338,7 @@ class PushToGMC implements ShouldQueue
                             }
                             if (mb_strtolower($attribute->name) == 'color') {
                                 $color = $attribute->value ?? $attribute->option;
+                                $getColorFrom = 'variant';
                             }
                             if (mb_strtolower($attribute->name) == 'type') {
                                 $type = $attribute->value ?? $attribute->option;
@@ -339,7 +358,7 @@ class PushToGMC implements ShouldQueue
                         if (!empty($type)) {
                             $extendTitles[] = $type;
                         }
-                        if (!empty($color)) {
+                        if (!empty($color) && ($getColorFrom == 'product' || $getColorFrom == 'variant')) {
                             $extendTitles[] = $color;
                         }
                         if (!empty($size)) {
@@ -354,7 +373,7 @@ class PushToGMC implements ShouldQueue
                         //chỉnh sửa:
                         //1- lấy trường id của sản phẩm để gửi lên id và item_group_id trên gmc
                         //2- riêng site kniben thì để như hiện tại, lấy trường sku để gửi lên trường id và item_group_id
-                        if ($rawProduct->shop_id == '628f226c4c30d21b5c5203d5') {
+                        if ($rawProduct->shop_id == '628f226c4c30d21b5c5203d5' && !empty($variant->sku)) {
                             $gmcData->offerId($variant->sku);
                             $gmcData->itemGroupId($variant->sku);
                         } else {
