@@ -218,10 +218,10 @@ class PushToGMC implements ShouldQueue
 
             $options = $rawProduct->options;
             if ($rawProduct->isWooProduct) {
+                if (empty($rawProduct->attributes)) {
+                    $rawProduct->attributes = array();
+                }
                 $options = $rawProduct->attributes;
-            }
-            if (empty($options)) {
-                $options = array();
             }
             foreach ($options as $item) {
                 $item = (object)$item;
