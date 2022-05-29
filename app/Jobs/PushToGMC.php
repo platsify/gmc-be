@@ -220,9 +220,8 @@ class PushToGMC implements ShouldQueue
             if ($rawProduct->isWooProduct) {
                 $options = $rawProduct->attributes;
             }
-            if (!is_array($options)) {
-                Log::error($rawProduct->system_product_id . " khong co options");
-                continue;
+            if (empty($options)) {
+                $options = array();
             }
             foreach ($options as $item) {
                 $item = (object)$item;
