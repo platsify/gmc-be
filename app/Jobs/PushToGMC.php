@@ -248,15 +248,15 @@ class PushToGMC implements ShouldQueue
 
             $map->push_variant_count = 0;
             foreach ($rawProduct->variants as $d => $variant) {
-				if (!is_array($variant->attributes)) {
-					$variant->attributes = array();
-				}
                 echo $rawProduct->system_product_id . ' variant so ' . $d . "\n";
                 try {
                     // Map vào GMC
                     $gmcData = new Product();
-
                     $variant = (object)$variant;
+                    if (!is_array($variant->attributes)) {
+                        $variant->attributes = array();
+                    }
+
                     //$inBlackList = VariantBlacklist::where('variant_id', $variant->id)->where('gmc_id', $shop->gmc_id)->first();
                     $inBlackList = VariantBlacklist::where('variant_id', $variant->id)->first();
                     if ($inBlackList) {
