@@ -220,6 +220,10 @@ class PushToGMC implements ShouldQueue
             if ($rawProduct->isWooProduct) {
                 $options = $rawProduct->attributes;
             }
+            if (!is_array($options)) {
+                Log::error($rawProduct->system_product_id . " khong co options");
+                continue;
+            }
             foreach ($options as $item) {
                 $item = (object)$item;
                 if (mb_strtolower($item->name) == 'size') {
@@ -245,7 +249,7 @@ class PushToGMC implements ShouldQueue
 
             $map->push_variant_count = 0;
             foreach ($rawProduct->variants as $d => $variant) {
-                echo $rawProduct->system_product_id .' variant so ' . $d . "\n";
+                echo $rawProduct->system_product_id . ' variant so ' . $d . "\n";
                 try {
                     // Map vào GMC
                     $gmcData = new Product();
@@ -301,27 +305,27 @@ class PushToGMC implements ShouldQueue
 
                         foreach ($variant->attributes as $attribute) {
                             $attribute = (object)$attribute;
-							print_r($attribute);
+                            print_r($attribute);
                             if (mb_strtolower($attribute->name) == 'size') {
-                                $size = isset($attribute->value)?$attribute->value:$attribute->option;
+                                $size = isset($attribute->value) ? $attribute->value : $attribute->option;
                             }
                             if (mb_strtolower($attribute->name) == 'gender') {
-                                $gender = isset($attribute->value)?$attribute->value:$attribute->option;
+                                $gender = isset($attribute->value) ? $attribute->value : $attribute->option;
                             }
                             if (mb_strtolower($attribute->name) == 'color') {
-                                $color = isset($attribute->value)?$attribute->value:$attribute->option;
+                                $color = isset($attribute->value) ? $attribute->value : $attribute->option;
                             }
                             if (mb_strtolower($attribute->name) == 'type') {
-                                $type = isset($attribute->value)?$attribute->value:$attribute->option;
+                                $type = isset($attribute->value) ? $attribute->value : $attribute->option;
                             }
                             if (mb_strtolower($attribute->name) == 'brand') {
-                                $brand = isset($attribute->value)?$attribute->value:$attribute->option;
+                                $brand = isset($attribute->value) ? $attribute->value : $attribute->option;
                             }
                             if (mb_strtolower($attribute->name) == 'gtin') {
-                                $gmcData->gtin(isset($attribute->value)?$attribute->value:$attribute->option);
+                                $gmcData->gtin(isset($attribute->value) ? $attribute->value : $attribute->option);
                             }
                             if (mb_strtolower($attribute->name) == 'mpn') {
-                                $gmcData->mpn(isset($attribute->value)?$attribute->value:$attribute->option);
+                                $gmcData->mpn(isset($attribute->value) ? $attribute->value : $attribute->option);
                             }
                         }
 
@@ -359,7 +363,7 @@ class PushToGMC implements ShouldQueue
 
                         $imageLink = null;
                         if (!$imageLink) {
-                            if (!empty( $variant->images)) {
+                            if (!empty($variant->images)) {
                                 $imageLink = !empty($variant->images) ? $variant->images[0]['src'] : '';
                             }
                             if (!$imageLink) {
@@ -509,15 +513,15 @@ class PushToGMC implements ShouldQueue
                     $gmcData->shipping($shipping);
                     $gmcData->taxes(['country' => 'us', 'rate' => 6, 'taxShip' => true]);
                     $gmcData->condition('new');
-                    $gmcData->customLabel0($project->name);
+                    $gmcData->customLabel1($project->name);
 
                     //$gmcData->customValues(['ships_from_country' => $shipFromCountry]);
-//                    $countCustomLabel = 0;
-//                    foreach ($rawProduct->productMapCategories as $productCategory) {
-////                        if ($productCategory->category) {
-////                            if ($countCustomLabel == 0) {
-////                                $gmcData->customLabel0($productCategory->category->name);
-////                            }
+                    $countCustomLabel = 0;
+                    foreach ($rawProduct->productMapCategories as $productCategory) {
+                        if ($productCategory->category) {
+                            if ($countCustomLabel == 0) {
+                                $gmcData->customLabel0($productCategory->category->name);
+                            }
 ////                            if ($countCustomLabel == 1) {
 ////                                $gmcData->customLabel1($productCategory->category->name);
 ////                            }
@@ -530,12 +534,12 @@ class PushToGMC implements ShouldQueue
 ////                            if ($countCustomLabel == 4) {
 ////                                $gmcData->customLabel4($productCategory->category->name);
 ////                            }
-////                            $countCustomLabel++;
-////                            if ($countCustomLabel == 4) {
-////                                break;
-////                            }
-//                        //}
-//                    }
+                            $countCustomLabel++;
+                            if ($countCustomLabel == 4) {
+                                break;
+                            }
+                        }
+                    }
 
                     if (!$project->todaySync) {
                         $project->todaySync = str_pad(date("d", time()), 2, '0', STR_PAD_LEFT) . '_' . str_pad(0, 5, '0', STR_PAD_LEFT);
