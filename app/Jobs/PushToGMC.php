@@ -145,7 +145,7 @@ class PushToGMC implements ShouldQueue
             $gender = 'unisex';
             $ageGroup = 'adult';
             $color = '';
-            $size = 'Free size';
+            $size = '';
             $brand = $shop->name;
             $type = '';
             $count = 1;
@@ -164,6 +164,9 @@ class PushToGMC implements ShouldQueue
             }
             if (!empty($defaultValues['gender'])) {
                 $gender = $defaultValues['gender'];
+            }
+            if (!empty($defaultValues['color'])) {
+                $color = $defaultValues['color'];
             }
             if (!empty($defaultValues['shipping_price'])) {
                 $shippingPrice = $defaultValues['shipping_price'];
@@ -277,7 +280,7 @@ class PushToGMC implements ShouldQueue
 
                     // Thay thế default value
                     if ($rawProduct->isWooProduct) {
-						echo 'XOA '. __LINE__;
+						// echo 'XOA '. __LINE__;
                         $buildTitle = $rawProduct->name;
 
 
@@ -306,7 +309,7 @@ class PushToGMC implements ShouldQueue
                             }
                         }
 
-echo 'XOA '. __LINE__;
+// echo 'XOA '. __LINE__;
                         foreach ($variant->attributes as $attribute) {
                             $attribute = (object)$attribute;
                             if (mb_strtolower($attribute->name) == 'size') {
@@ -331,7 +334,7 @@ echo 'XOA '. __LINE__;
                                 $gmcData->mpn(isset($attribute->value) ? $attribute->value : $attribute->option);
                             }
                         }
-echo 'XOA '. __LINE__;
+// echo 'XOA '. __LINE__;
                         $extendTitles = [];
                         if (!empty($type)) {
                             $extendTitles[] = $type;
@@ -363,7 +366,7 @@ echo 'XOA '. __LINE__;
                             $gmcData->offerId($iOfferId);
                             $gmcData->itemGroupId($iOfferId);
                         }
-echo 'XOA '. __LINE__;
+// echo 'XOA '. __LINE__;
                         $imageLink = null;
                         if (!$imageLink) {
                             if (!empty($variant->images)) {
@@ -390,7 +393,7 @@ echo 'XOA '. __LINE__;
                                 $gmcData->mpn($v);
                             }
                         }
-echo 'XOA '. __LINE__;
+// echo 'XOA '. __LINE__;
                         foreach ($variant as $k => $v) {
                             if ($k == 'woosea_gtin' && !empty($v)) {
                                 $gmcData->gtin($v);
@@ -421,7 +424,7 @@ echo 'XOA '. __LINE__;
                             $type = $variant->{'option' . $typeOption};
                         }
                     }
-echo 'XOA '. __LINE__;
+// echo 'XOA '. __LINE__;
                     // Tìm xem SP này có thuộc collection là quilt ko, nếu có thì chỉ lấy Throw
                     $isQuilt = false;
                     foreach ($rawProduct->productMapCategories as $productCategory) {
@@ -451,7 +454,7 @@ echo 'XOA '. __LINE__;
                             continue;
                         }
                     }
-					echo 'XOA '. __LINE__;
+					// echo 'XOA '. __LINE__;
                     // Tìm xem SP này có thuộc collection là hoodie ko, nếu có thì chỉ lấy aop hoodie
                     $isHoodieCollection = false;
                     foreach ($rawProduct->productMapCategories as $productCategory) {
@@ -460,7 +463,7 @@ echo 'XOA '. __LINE__;
                             break;
                         }
                     }
-					echo 'XOA '. __LINE__;
+					// echo 'XOA '. __LINE__;
                     if ($isHoodieCollection) {
                         if ($typeOption != 99999 && mb_strtolower($type) != 'aop hoodie') {
                             echo 'Thuoc muc hoodie nhung $type = ' . $type . " nen bo qua \n";
@@ -476,7 +479,7 @@ echo 'XOA '. __LINE__;
                         continue;
                     }
                     echo 'SSSSSSize = ' . $size . " =====\n";
-echo 'XOA '. __LINE__;
+// echo 'XOA '. __LINE__;
 
                     //  Điều kiện lọc
                     if ($project->require_gtin && empty($variant->barcode)) {
@@ -486,7 +489,9 @@ echo 'XOA '. __LINE__;
 
                     $gmcData->ageGroup($ageGroup);
                     $gmcData->color(!empty($color) ? $color : 'multicolor');
-                    $gmcData->sizes($size);
+                    if (!empty($size)) {
+                        $gmcData->sizes($size);
+                    }
                     $gmcData->sizeType($sizeType);
                     $gmcData->sizeSystem($sizeSystem);
                     $gmcData->multipack($multipack);
