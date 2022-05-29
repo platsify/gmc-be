@@ -287,19 +287,19 @@ class PushToGMC implements ShouldQueue
                         foreach ($rawProduct->attributes as $attribute) {
                             $attribute = (object)$attribute;
                             if (mb_strtolower($attribute->name) == 'size' && count($attribute->options) > 0) {
-                                $size = $attribute->options[0];
+                                $size = $this->myUcFirst($attribute->options[0]);
                             }
                             if (mb_strtolower($attribute->name) == 'gender' && count($attribute->options) > 0) {
-                                $gender = $attribute->options[0];
+                                $gender = $this->myUcFirst($attribute->options[0]);
                             }
                             if (mb_strtolower($attribute->name) == 'color' && count($attribute->options) > 0) {
-                                $color = $attribute->options[0];
+                                $color = $this->myUcFirst($attribute->options[0]);
                             }
                             if (mb_strtolower($attribute->name) == 'type' && count($attribute->options) > 0) {
-                                $type = $attribute->options[0];
+                                $type = $this->myUcFirst($attribute->options[0]);
                             }
                             if (mb_strtolower($attribute->name) == 'brand' && count($attribute->options) > 0) {
-                                $brand = $attribute->options[0];
+                                $brand = $this->myUcFirst($attribute->options[0]);
                             }
                             if (mb_strtolower($attribute->name) == 'gtin' && count($attribute->options) > 0) {
                                 $gmcData->gtin($attribute->options[0]);
@@ -313,25 +313,25 @@ class PushToGMC implements ShouldQueue
                         foreach ($variant->attributes as $attribute) {
                             $attribute = (object)$attribute;
                             if (mb_strtolower($attribute->name) == 'size') {
-                                $size = isset($attribute->value) ? $attribute->value : $attribute->option;
+                                $size = $this->myUcFirst($attribute->value ?? $attribute->option);
                             }
                             if (mb_strtolower($attribute->name) == 'gender') {
-                                $gender = isset($attribute->value) ? $attribute->value : $attribute->option;
+                                $gender = $this->myUcFirst($attribute->value ?? $attribute->option);
                             }
                             if (mb_strtolower($attribute->name) == 'color') {
-                                $color = isset($attribute->value) ? $attribute->value : $attribute->option;
+                                $color = $this->myUcFirst($attribute->value ?? $attribute->option);
                             }
                             if (mb_strtolower($attribute->name) == 'type') {
-                                $type = isset($attribute->value) ? $attribute->value : $attribute->option;
+                                $type = $this->myUcFirst($attribute->value ?? $attribute->option);
                             }
                             if (mb_strtolower($attribute->name) == 'brand') {
-                                $brand = isset($attribute->value) ? $attribute->value : $attribute->option;
+                                $brand = $this->myUcFirst($attribute->option ?? $attribute->value);
                             }
                             if (mb_strtolower($attribute->name) == 'gtin') {
-                                $gmcData->gtin(isset($attribute->value) ? $attribute->value : $attribute->option);
+                                $gmcData->gtin($attribute->value ?? $attribute->option);
                             }
                             if (mb_strtolower($attribute->name) == 'mpn') {
-                                $gmcData->mpn(isset($attribute->value) ? $attribute->value : $attribute->option);
+                                $gmcData->mpn($attribute->value ?? $attribute->option);
                             }
                         }
 // echo 'XOA '. __LINE__;
@@ -586,5 +586,30 @@ class PushToGMC implements ShouldQueue
             $map->save();
         }
         return Command::SUCCESS;
+    }
+
+    function myUcFirst($str) {
+        $str = trim($str);
+        if (empty($str)) {
+            return $str;
+        }
+        if ($str == '5xl') {
+            return '5XL';
+        }
+        if ($str == '4xl') {
+            return '4XL';
+        }
+        if ($str == '3xl') {
+            return '3XL';
+        }
+        if ($str == '2xl') {
+            return '2XL';
+        }
+        if ($str == 'xl') {
+            return 'XL';
+        }
+
+        return ucfirst($str);
+
     }
 }
