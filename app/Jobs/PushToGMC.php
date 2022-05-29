@@ -440,7 +440,8 @@ class PushToGMC implements ShouldQueue
                         }
                     }
 
-                    // Tìm xem SP này có thuộc collection là bedding ko,  nếu có thì chỉ lấy Quilt Cover + 2 Pillow Cases' hoặc 'Duvet Cover + 2 Pillow Cases'
+                    // Tìm xem SP này có thuộc collection là bedding ko,  nếu có thì chỉ lấy 'Quilt Cover + 2 Pillow Cases' hoặc 'Duvet Cover + 2 Pillow Cases' hoặc 'Quit Cover + 2 Pillow Cases' trót gõ sai chính tả :))
+
                     $isBeddingCollection = false;
                     foreach ($rawProduct->productMapCategories as $productCategory) {
                         if ($productCategory->category && strpos(mb_strtolower($productCategory->category->name), 'bedding') !== false) {
@@ -449,7 +450,7 @@ class PushToGMC implements ShouldQueue
                         }
                     }
                     if ($isBeddingCollection) {
-                        if ($typeOption != 99999 && mb_strtolower($type) != 'quilt cover + 2 pillow cases' && mb_strtolower($type) != 'duvet cover + 2 pillow cases') {
+                        if ($typeOption != 99999 && mb_strtolower($type) != 'quilt cover + 2 pillow cases' && mb_strtolower($type) != 'duvet cover + 2 pillow cases' && mb_strtolower($type) != 'quit cover + 2 pillow cases') {
                             echo 'Thuoc muc bedding nhung $type = ' . $type . " nen bo qua \n";
                             continue;
                         }
