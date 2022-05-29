@@ -245,7 +245,7 @@ class PushToGMC implements ShouldQueue
 
             $map->push_variant_count = 0;
             foreach ($rawProduct->variants as $d => $variant) {
-                echo 'Variant so ' . $d . "\n";
+                echo $rawProduct->system_product_id .' variant so ' . $d . "\n";
                 try {
                     // Map vào GMC
                     $gmcData = new Product();
@@ -301,26 +301,27 @@ class PushToGMC implements ShouldQueue
 
                         foreach ($variant->attributes as $attribute) {
                             $attribute = (object)$attribute;
+							print_r($attribute);
                             if (mb_strtolower($attribute->name) == 'size') {
-                                $size = $attribute->value;
+                                $size = isset($attribute->value)?$attribute->value:$attribute->option;
                             }
                             if (mb_strtolower($attribute->name) == 'gender') {
-                                $gender = $attribute->value;
+                                $gender = isset($attribute->value)?$attribute->value:$attribute->option;
                             }
                             if (mb_strtolower($attribute->name) == 'color') {
-                                $color = $attribute->value;
+                                $color = isset($attribute->value)?$attribute->value:$attribute->option;
                             }
                             if (mb_strtolower($attribute->name) == 'type') {
-                                $type = $attribute->value;
+                                $type = isset($attribute->value)?$attribute->value:$attribute->option;
                             }
                             if (mb_strtolower($attribute->name) == 'brand') {
-                                $brand = $attribute->value;
+                                $brand = isset($attribute->value)?$attribute->value:$attribute->option;
                             }
                             if (mb_strtolower($attribute->name) == 'gtin') {
-                                $gmcData->gtin($attribute->value);
+                                $gmcData->gtin(isset($attribute->value)?$attribute->value:$attribute->option);
                             }
                             if (mb_strtolower($attribute->name) == 'mpn') {
-                                $gmcData->mpn($attribute->value);
+                                $gmcData->mpn(isset($attribute->value)?$attribute->value:$attribute->option);
                             }
                         }
 
