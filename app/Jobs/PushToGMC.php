@@ -357,6 +357,7 @@ class PushToGMC implements ShouldQueue
                         $extendTitles = [];
                         // Từ 31/05 có bao nhiêu attributes thì nối bằng đó vào title.
                         foreach ($variant->attributes as $attribute) {
+                            $attribute = (object)$attribute;
                             $extendTitles[] = $attribute->value ?? $attribute->option;
                         }
 //                        if (!empty($type)) {
