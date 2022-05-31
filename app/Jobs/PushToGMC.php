@@ -494,7 +494,7 @@ class PushToGMC implements ShouldQueue
                     }
 
                     // Loại bỏ các sản phẩm có Size nhưng ko phải 'S', 'Throw', 'Tween', 'Twin', có chứa 6
-                    if ($sizeOption != 99999 && !in_array(mb_strtolower($size), ['s', 'throw', 'tween', 'twin']) && strpos(size, '6') === false) {
+                    if ($sizeOption != 99999 && !in_array(mb_strtolower($size), ['s', 'throw', 'tween', 'twin']) && strpos($size, '6') === false) {
                         echo 'Size = ' . $size . " khong thuoc danh sach cho phep ['S', 'Throw', 'Tween', 'Twin', 'có chứa 6'] nen bo qaaua \n";
                         continue;
                     }
