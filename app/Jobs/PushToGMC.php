@@ -355,15 +355,19 @@ class PushToGMC implements ShouldQueue
                         }
 // echo 'XOA '. __LINE__;
                         $extendTitles = [];
-                        if (!empty($type)) {
-                            $extendTitles[] = $type;
+                        // Từ 31/05 có bao nhiêu attributes thì nối bằng đó vào title.
+                        foreach ($variant->attributes as $attribute) {
+                            $extendTitles[] = $attribute->value ?? $attribute->option;
                         }
-                        if (!empty($color) && ($getColorFrom == 'product' || $getColorFrom == 'variant')) {
-                            $extendTitles[] = $color;
-                        }
-                        if (!empty($size)) {
-                            $extendTitles[] = $size;
-                        }
+//                        if (!empty($type)) {
+//                            $extendTitles[] = $type;
+//                        }
+//                        if (!empty($color) && ($getColorFrom == 'product' || $getColorFrom == 'variant')) {
+//                            $extendTitles[] = $color;
+//                        }
+//                        if (!empty($size)) {
+//                            $extendTitles[] = $size;
+//                        }
                         if (!empty($extendTitles)) {
                             $buildTitle .= ', ' . implode(', ', $extendTitles);
                         }
