@@ -50,10 +50,10 @@ class PushSingleVariationToGMC implements ShouldQueue
 			$this->map->save();
            echo "Done ". $this->gmcData->title."\n";
         })->otherwise(function($response){
-            Log::error($response);
+            Log::error($this->gmcData->offerId. ': '.$this->gmcData->title.': '.$response);
             throw new Exception($response);
         })->catch(function($e){
-            Log::error($e->getMessage());
+            Log::error($this->gmcData->offerId. ': '.$this->gmcData->title.': '. $e->getMessage());
             throw new Exception($e);
         });
 
