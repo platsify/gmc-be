@@ -383,7 +383,7 @@ class PushToGMC implements ShouldQueue
                                 $iOfferId = $idParts[count($idParts) - 1];
                             }
                             $gmcData->offerId($iOfferId);
-                            $gmcData->itemGroupId($iOfferId);
+                            $gmcData->itemGroupId(str_replace($rawProduct->shop_id.'__', '', $rawProduct->original_id));
                         }
 // echo 'XOA '. __LINE__;
                         $imageLink = null;
