@@ -96,6 +96,7 @@ class SyncWooByPage implements ShouldQueue
             $wooProduct->shop_id = $this->shopId;
             $wooProduct->id = $this->shop->id . '__' . $wooProduct->id;
             $wooProduct->original_id = $wooProduct->id;
+			$wooProduct->description = $wooProduct->description;
             $basicProductData = $this->mapSbToProduct($wooProduct, $this->shop);
 
 			$allVariants = array();

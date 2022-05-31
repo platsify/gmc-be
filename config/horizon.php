@@ -151,7 +151,7 @@ return [
     |
     */
 
-    'memory_limit' => 640,
+    'memory_limit' => 2048,
 
     /*
     |--------------------------------------------------------------------------
@@ -173,6 +173,7 @@ return [
             'memory' => 1280,
             'tries' => 2,
             'nice' => 0,
+			'timeout' => 900,
         ],
     ],
 
@@ -182,14 +183,18 @@ return [
                 'maxProcesses' => 10,
                 'balanceMaxShift' => 1,
                 'balanceCooldown' => 3,
+				'timeout' => 900,
             ],
+			'timeout' => 900,
         ],
 
         'local' => [
             'supervisor-1' => [
                 'maxProcesses' => 32,
 				'tries' => 2,
+				'timeout' => 900,
             ],
+			'timeout' => 900,
         ],
     ],
 ];
