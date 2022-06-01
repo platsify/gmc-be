@@ -83,7 +83,7 @@ class SyncWooByPage implements ShouldQueue
             throw new \Exception($e);
         }
 
-        if (!$wooProducts) {
+        if (!$wooProducts || empty($wooProducts)) {
            // echo "Ko co san pham nao\n";
             return;
         }

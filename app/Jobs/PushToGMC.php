@@ -378,7 +378,7 @@ class PushToGMC implements ShouldQueue
                         //chỉnh sửa:
                         //1- lấy trường id của sản phẩm để gửi lên id và item_group_id trên gmc
                         //2- riêng site kniben thì để như hiện tại, lấy trường sku để gửi lên trường id và item_group_id
-                        if ($rawProduct->shop_id == '628f226c4c30d21b5c5203d5' && !empty($variant->sku)) {
+                        if ($rawProduct->shop_id == '6295e6c0cef5d547605261c7' && !empty($variant->sku)) {
                             $gmcData->offerId($variant->sku);
                             $gmcData->itemGroupId($variant->sku);
                         } else {
